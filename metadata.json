@@ -1,0 +1,6 @@
+{
+  "name": "StratLearn - Interactive Business Strategy & Planning Tools",
+  "description": "An interactive learning and simulation platform for 26 executive frameworks across Strategy & Planning (SWOT, PESTLE, 5 Forces, BSC, Ansoff, Blue Ocean, VRIO, OKRs), Business Model Innovation (BMC, Lean Canvas, VPC, Design Thinking, JTBD, St. Gallen BMN), Marketing & Growth (Marketing Mix 4Ps/7Ps, STP, AIDA, Journey Map, Growth Hacking, NPS), and Operations & Process (Lean Management, Six Sigma, Kaizen, VSM, BPR, Kanban).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
