@@ -3,17 +3,21 @@ import { SCENARIO_MISSIONS, ScenarioMission } from '../data/toolsData.ts';
 import { CATEGORY_2_SCENARIOS } from '../data/innovationToolsData.ts';
 import { CATEGORY_3_SCENARIOS } from '../data/marketingToolsData.ts';
 import { CATEGORY_4_SCENARIOS } from '../data/operationsToolsData.ts';
+import { CATEGORY_5_SCENARIOS } from '../data/financialToolsData.ts';
+import { CATEGORY_6_SCENARIOS } from '../data/projectToolsData.ts';
 import { Award, CheckCircle2, XCircle, ArrowRight, RotateCcw, AlertTriangle, Lightbulb, Compass, Filter } from 'lucide-react';
 
 const ALL_MISSIONS: ScenarioMission[] = [
   ...SCENARIO_MISSIONS,
   ...CATEGORY_2_SCENARIOS,
   ...CATEGORY_3_SCENARIOS,
-  ...CATEGORY_4_SCENARIOS
+  ...CATEGORY_4_SCENARIOS,
+  ...CATEGORY_5_SCENARIOS,
+  ...CATEGORY_6_SCENARIOS
 ];
 
 export function ScenarioSimulator() {
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project'>('All');
   const [selectedMissionId, setSelectedMissionId] = useState<string>(ALL_MISSIONS[0].id);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -24,6 +28,8 @@ export function ScenarioSimulator() {
     if (categoryFilter === 'Innovation') return CATEGORY_2_SCENARIOS.some(cm => cm.id === m.id);
     if (categoryFilter === 'Marketing') return CATEGORY_3_SCENARIOS.some(mm => mm.id === m.id);
     if (categoryFilter === 'Operations') return CATEGORY_4_SCENARIOS.some(om => om.id === m.id);
+    if (categoryFilter === 'Financial') return CATEGORY_5_SCENARIOS.some(fm => fm.id === m.id);
+    if (categoryFilter === 'Project') return CATEGORY_6_SCENARIOS.some(pm => pm.id === m.id);
     return true;
   });
 
@@ -87,7 +93,7 @@ export function ScenarioSimulator() {
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-2xs font-bold uppercase tracking-wider text-slate-400">Category:</span>
-          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations'] as const).map(cat => (
+          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations', 'Financial', 'Project'] as const).map(cat => (
             <button
               key={cat}
               onClick={() => {
@@ -97,6 +103,8 @@ export function ScenarioSimulator() {
                   if (cat === 'Innovation') return CATEGORY_2_SCENARIOS.some(cm => cm.id === m.id);
                   if (cat === 'Marketing') return CATEGORY_3_SCENARIOS.some(mm => mm.id === m.id);
                   if (cat === 'Operations') return CATEGORY_4_SCENARIOS.some(om => om.id === m.id);
+                  if (cat === 'Financial') return CATEGORY_5_SCENARIOS.some(fm => fm.id === m.id);
+                  if (cat === 'Project') return CATEGORY_6_SCENARIOS.some(pm => pm.id === m.id);
                   return true;
                 });
                 if (firstMatching) handleSelectMission(firstMatching.id);
@@ -115,7 +123,11 @@ export function ScenarioSimulator() {
                 ? `Innovation (${CATEGORY_2_SCENARIOS.length})`
                 : cat === 'Marketing'
                 ? `Marketing (${CATEGORY_3_SCENARIOS.length})`
-                : `Operations (${CATEGORY_4_SCENARIOS.length})`}
+                : cat === 'Operations'
+                ? `Operations (${CATEGORY_4_SCENARIOS.length})`
+                : cat === 'Financial'
+                ? `Financial (${CATEGORY_5_SCENARIOS.length})`
+                : `Project Management (${CATEGORY_6_SCENARIOS.length})`}
             </button>
           ))}
         </div>

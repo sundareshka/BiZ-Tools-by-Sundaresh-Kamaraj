@@ -3,12 +3,21 @@ import { TOOLS_DATA, QuizQuestion } from '../data/toolsData.ts';
 import { INNOVATION_TOOLS_DATA } from '../data/innovationToolsData.ts';
 import { MARKETING_TOOLS_DATA } from '../data/marketingToolsData.ts';
 import { OPERATIONS_TOOLS_DATA } from '../data/operationsToolsData.ts';
+import { FINANCIAL_TOOLS_DATA } from '../data/financialToolsData.ts';
+import { PROJECT_TOOLS_DATA } from '../data/projectToolsData.ts';
 import { CheckCircle2, XCircle, Award, RotateCcw, ArrowRight, BookOpen, Sparkles, Printer } from 'lucide-react';
 
-const ALL_TOOLS = [...TOOLS_DATA, ...INNOVATION_TOOLS_DATA, ...MARKETING_TOOLS_DATA, ...OPERATIONS_TOOLS_DATA];
+const ALL_TOOLS = [
+  ...TOOLS_DATA,
+  ...INNOVATION_TOOLS_DATA,
+  ...MARKETING_TOOLS_DATA,
+  ...OPERATIONS_TOOLS_DATA,
+  ...FINANCIAL_TOOLS_DATA,
+  ...PROJECT_TOOLS_DATA
+];
 
 export function TrainingQuizModule() {
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project'>('All');
   const [selectedToolId, setSelectedToolId] = useState<string>('all');
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [showCertificate, setShowCertificate] = useState(false);
@@ -19,6 +28,8 @@ export function TrainingQuizModule() {
     if (categoryFilter === 'Innovation') return t.category.includes('Innovation');
     if (categoryFilter === 'Marketing') return t.category.includes('Marketing');
     if (categoryFilter === 'Operations') return t.category.includes('Operations');
+    if (categoryFilter === 'Financial') return t.category.includes('Financial');
+    if (categoryFilter === 'Project') return t.category.includes('Project');
     return true;
   });
 
@@ -37,6 +48,8 @@ export function TrainingQuizModule() {
     if (categoryFilter === 'Innovation') return tool.category.includes('Innovation');
     if (categoryFilter === 'Marketing') return tool.category.includes('Marketing');
     if (categoryFilter === 'Operations') return tool.category.includes('Operations');
+    if (categoryFilter === 'Financial') return tool.category.includes('Financial');
+    if (categoryFilter === 'Project') return tool.category.includes('Project');
     return true;
   });
 
@@ -81,13 +94,13 @@ export function TrainingQuizModule() {
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1">
             <span>Knowledge Verification</span>
             <span>·</span>
-            <span>130 Official Guide Questions (26 Tools across 4 Pillars)</span>
+            <span>185 Official Guide Questions (37 Tools across 6 Pillars)</span>
             <span>·</span>
             <span>Instant Theoretical Feedback</span>
           </div>
-          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Executive Strategy, Innovation, Marketing & Operations Certification</h3>
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Executive Strategy, Innovation, Marketing, Operations, Finance & Project Management Certification</h3>
           <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-            Test your understanding across all 26 business frameworks with authentic questions and detailed answer key explanations from the four official training guides by Sundaresh Kamaraj.
+            Test your understanding across all 37 business frameworks with authentic questions and detailed answer key explanations from the official training guides by Sundaresh Kamaraj.
           </p>
         </div>
 
@@ -116,7 +129,7 @@ export function TrainingQuizModule() {
       <div className="space-y-2.5">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
           <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Pillar:</span>
-          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations'] as const).map(cat => (
+          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations', 'Financial', 'Project'] as const).map(cat => (
             <button
               key={cat}
               onClick={() => {
@@ -129,7 +142,7 @@ export function TrainingQuizModule() {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {cat === 'All' ? 'All Pillars' : cat}
+              {cat === 'All' ? 'All Pillars' : cat === 'Financial' ? 'Financial & Performance' : cat === 'Project' ? 'Project Management' : cat}
             </button>
           ))}
         </div>

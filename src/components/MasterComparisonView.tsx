@@ -3,10 +3,26 @@ import { TOOLS_DATA, STRATEGY_STACKS, StrategyStack } from '../data/toolsData.ts
 import { INNOVATION_TOOLS_DATA, CATEGORY_2_STACKS } from '../data/innovationToolsData.ts';
 import { MARKETING_TOOLS_DATA, CATEGORY_3_STACKS } from '../data/marketingToolsData.ts';
 import { OPERATIONS_TOOLS_DATA, CATEGORY_4_STACKS } from '../data/operationsToolsData.ts';
+import { FINANCIAL_TOOLS_DATA, CATEGORY_5_STACKS } from '../data/financialToolsData.ts';
+import { PROJECT_TOOLS_DATA, CATEGORY_6_STACKS } from '../data/projectToolsData.ts';
 import { Layers, ArrowRight, CheckCircle2, Download, Printer, Filter, Sparkles } from 'lucide-react';
 
-const ALL_TOOLS = [...TOOLS_DATA, ...INNOVATION_TOOLS_DATA, ...MARKETING_TOOLS_DATA, ...OPERATIONS_TOOLS_DATA];
-const ALL_STACKS = [...STRATEGY_STACKS, ...CATEGORY_2_STACKS, ...CATEGORY_3_STACKS, ...CATEGORY_4_STACKS];
+const ALL_TOOLS = [
+  ...TOOLS_DATA,
+  ...INNOVATION_TOOLS_DATA,
+  ...MARKETING_TOOLS_DATA,
+  ...OPERATIONS_TOOLS_DATA,
+  ...FINANCIAL_TOOLS_DATA,
+  ...PROJECT_TOOLS_DATA
+];
+const ALL_STACKS = [
+  ...STRATEGY_STACKS,
+  ...CATEGORY_2_STACKS,
+  ...CATEGORY_3_STACKS,
+  ...CATEGORY_4_STACKS,
+  ...CATEGORY_5_STACKS,
+  ...CATEGORY_6_STACKS
+];
 
 export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: string) => void }) {
   const [filterCategory, setFilterCategory] = useState<string>('All');
@@ -16,9 +32,8 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
   const [showExportModal, setShowExportModal] = useState(false);
 
   const filteredTools = ALL_TOOLS.filter(t => {
-    if (filterCategory !== 'All' && t.category !== filterCategory) return false;
+    if (filterCategory !== 'All' && !t.category.includes(filterCategory)) return false;
     if (filterDifficulty !== 'All' && !t.difficulty.toLowerCase().includes(filterDifficulty.toLowerCase())) return false;
-    if (filterScope !== 'All' && !t.scope.toLowerCase().includes(filterScope.toLowerCase())) return false;
     return true;
   });
 
@@ -37,7 +52,7 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
             <span>Back Matter Guidance</span>
           </div>
           <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-            Compare all 26 frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, and Operations & Process. Select the right tool stack for your organizational stage and chain frameworks into a cohesive annual strategy cycle.
+            Compare all 37 frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial & Performance, and Project Management. Select the right tool stack for your organizational stage and chain frameworks into a cohesive annual strategy cycle.
           </p>
         </div>
 
@@ -134,7 +149,7 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h4 className="text-base font-bold text-slate-900">Master Comparison Matrix</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Filter across all 14 frameworks to match your immediate strategic question.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Filter across all 37 frameworks to match your immediate strategic question.</p>
           </div>
 
           {/* Filters */}
@@ -146,11 +161,13 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
                 onChange={(e) => setFilterCategory(e.target.value)}
                 className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-medium"
               >
-                <option value="All">All Categories (26)</option>
+                <option value="All">All Categories (37)</option>
                 <option value="Strategy & Planning">Strategy & Planning (8)</option>
                 <option value="Business Model & Innovation">Business Model & Innovation (6)</option>
                 <option value="Marketing & Growth">Marketing & Growth (6)</option>
                 <option value="Operations & Process">Operations & Process (6)</option>
+                <option value="Financial & Performance">Financial & Performance (6)</option>
+                <option value="Project Management">Project Management (5)</option>
               </select>
             </div>
 

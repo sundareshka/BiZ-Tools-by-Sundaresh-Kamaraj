@@ -3,6 +3,8 @@ import { TOOLS_DATA, ToolDefinition } from './data/toolsData.ts';
 import { INNOVATION_TOOLS_DATA } from './data/innovationToolsData.ts';
 import { MARKETING_TOOLS_DATA } from './data/marketingToolsData.ts';
 import { OPERATIONS_TOOLS_DATA } from './data/operationsToolsData.ts';
+import { FINANCIAL_TOOLS_DATA } from './data/financialToolsData.ts';
+import { PROJECT_TOOLS_DATA } from './data/projectToolsData.ts';
 
 // Category 1: Strategy & Planning Simulators
 import { SWOTSimulator } from './components/simulators/SWOTSimulator.tsx';
@@ -38,6 +40,21 @@ import { VSMSimulator } from './components/simulators/VSMSimulator.tsx';
 import { BPRSimulator } from './components/simulators/BPRSimulator.tsx';
 import { KanbanSimulator } from './components/simulators/KanbanSimulator.tsx';
 
+// Category 5: Financial & Performance Simulators
+import { BreakEvenSimulator } from './components/simulators/BreakEvenSimulator.tsx';
+import { CostBenefitSimulator } from './components/simulators/CostBenefitSimulator.tsx';
+import { BudgetingVarianceSimulator } from './components/simulators/BudgetingVarianceSimulator.tsx';
+import { WorkingCapitalSimulator } from './components/simulators/WorkingCapitalSimulator.tsx';
+import { DuPontSimulator } from './components/simulators/DuPontSimulator.tsx';
+import { ActivityBasedCostingSimulator } from './components/simulators/ActivityBasedCostingSimulator.tsx';
+
+// Category 6: Project Management Simulators
+import { GanttSimulator } from './components/simulators/GanttSimulator.tsx';
+import { CPMSimulator } from './components/simulators/CPMSimulator.tsx';
+import { PertSimulator } from './components/simulators/PertSimulator.tsx';
+import { AgileSimulator } from './components/simulators/AgileSimulator.tsx';
+import { ScrumSimulator } from './components/simulators/ScrumSimulator.tsx';
+
 // Interactive Modules
 import { ScenarioSimulator } from './components/ScenarioSimulator.tsx';
 import { TrainingQuizModule } from './components/TrainingQuizModule.tsx';
@@ -60,20 +77,24 @@ import {
   SlidersHorizontal,
   ArrowRight,
   HelpCircle,
-  Building
+  Building,
+  Coins,
+  KanbanSquare
 } from 'lucide-react';
 
 const ALL_TOOLS: ToolDefinition[] = [
   ...TOOLS_DATA,
   ...INNOVATION_TOOLS_DATA,
   ...MARKETING_TOOLS_DATA,
-  ...OPERATIONS_TOOLS_DATA
+  ...OPERATIONS_TOOLS_DATA,
+  ...FINANCIAL_TOOLS_DATA,
+  ...PROJECT_TOOLS_DATA
 ];
 
 export default function App() {
   const [activeMainTab, setActiveMainTab] = useState<'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary'>('simulators');
-  const [selectedToolId, setSelectedToolId] = useState<string>('lean');
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations'>('Operations');
+  const [selectedToolId, setSelectedToolId] = useState<string>('gantt');
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project'>('Project');
   const [showCurriculumOverview, setShowCurriculumOverview] = useState<boolean>(false);
 
   const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
@@ -84,10 +105,12 @@ export default function App() {
     if (categoryFilter === 'Innovation') return t.category.includes('Innovation');
     if (categoryFilter === 'Marketing') return t.category.includes('Marketing');
     if (categoryFilter === 'Operations') return t.category.includes('Operations');
+    if (categoryFilter === 'Financial') return t.category.includes('Financial');
+    if (categoryFilter === 'Project') return t.category.includes('Project');
     return true;
   });
 
-  const handleSetCategory = (cat: 'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations') => {
+  const handleSetCategory = (cat: 'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project') => {
     setCategoryFilter(cat);
     if (cat === 'Strategy') {
       if (!TOOLS_DATA.some(t => t.id === selectedToolId)) {
@@ -105,6 +128,14 @@ export default function App() {
       if (!OPERATIONS_TOOLS_DATA.some(t => t.id === selectedToolId)) {
         setSelectedToolId('lean');
       }
+    } else if (cat === 'Financial') {
+      if (!FINANCIAL_TOOLS_DATA.some(t => t.id === selectedToolId)) {
+        setSelectedToolId('breakeven');
+      }
+    } else if (cat === 'Project') {
+      if (!PROJECT_TOOLS_DATA.some(t => t.id === selectedToolId)) {
+        setSelectedToolId('gantt');
+      }
     }
   };
 
@@ -119,6 +150,10 @@ export default function App() {
       } else if (categoryFilter === 'Marketing' && !tool.category.includes('Marketing')) {
         setCategoryFilter('All');
       } else if (categoryFilter === 'Operations' && !tool.category.includes('Operations')) {
+        setCategoryFilter('All');
+      } else if (categoryFilter === 'Financial' && !tool.category.includes('Financial')) {
+        setCategoryFilter('All');
+      } else if (categoryFilter === 'Project' && !tool.category.includes('Project')) {
         setCategoryFilter('All');
       }
     }
@@ -136,6 +171,20 @@ export default function App() {
 
   // Helper for pillar styling
   const getToolPillarMeta = (tool: ToolDefinition) => {
+    if (tool.category.includes('Project')) {
+      return {
+        pillarNumber: 'Pillar 6',
+        pillarName: 'Project Management',
+        badgeClass: 'bg-indigo-50 text-indigo-900 border-indigo-300'
+      };
+    }
+    if (tool.category.includes('Financial')) {
+      return {
+        pillarNumber: 'Pillar 5',
+        pillarName: 'Financial & Performance',
+        badgeClass: 'bg-emerald-50 text-emerald-900 border-emerald-300'
+      };
+    }
     if (tool.category.includes('Operations')) {
       return {
         pillarNumber: 'Pillar 4',
@@ -181,11 +230,11 @@ export default function App() {
                 <h1 className="font-bold text-slate-900 tracking-tight text-base sm:text-lg leading-tight">
                   StratLearn
                 </h1>
-                <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 tracking-wide font-mono">
-                  26 Tools
+                <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-900 tracking-wide font-mono">
+                  6 Pillars · 37 Tools
                 </span>
               </div>
-                        </div>
+            </div>
           </div>
 
           {/* Primary View Navigation Tabs */}
@@ -225,7 +274,7 @@ export default function App() {
               <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
                 activeMainTab === 'scenarios' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'
               }`}>
-                15
+                23
               </span>
             </button>
             <button
@@ -241,7 +290,7 @@ export default function App() {
               <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
                 activeMainTab === 'quizzes' ? 'bg-slate-700 text-white' : 'bg-blue-100 text-blue-800'
               }`}>
-                130
+                185
               </span>
             </button>
             <button
@@ -268,7 +317,7 @@ export default function App() {
               <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
                 activeMainTab === 'glossary' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'
               }`}>
-                110+
+                170+
               </span>
             </button>
           </nav>
@@ -311,7 +360,7 @@ export default function App() {
               activeMainTab === 'scenarios' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
             }`}
           >
-            Missions (15)
+            Missions (23)
           </button>
           <button
             onClick={() => setActiveMainTab('quizzes')}
@@ -319,7 +368,7 @@ export default function App() {
               activeMainTab === 'quizzes' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
             }`}
           >
-            Quizzes (130)
+            Quizzes (185)
           </button>
           <button
             onClick={() => setActiveMainTab('stacks')}
@@ -359,7 +408,7 @@ export default function App() {
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  All 26
+                  All 37
                 </button>
                 <button
                   onClick={() => handleSetCategory('Strategy')}
@@ -393,17 +442,44 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => handleSetCategory('Operations')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
                     categoryFilter === 'Operations'
                       ? 'bg-teal-900 text-white shadow-xs'
                       : 'text-slate-600 hover:text-teal-900 hover:bg-teal-50'
                   }`}
                 >
-                  <span>4. Operations</span>
+                  4. Operations <span className="opacity-70 text-2xs ml-0.5">(6)</span>
+                </button>
+                <button
+                  onClick={() => handleSetCategory('Financial')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                    categoryFilter === 'Financial'
+                      ? 'bg-emerald-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-emerald-900 hover:bg-emerald-50'
+                  }`}
+                >
+                  <Coins className="w-3 h-3 text-emerald-400" />
+                  <span>5. Financial</span>
                   <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                    categoryFilter === 'Operations' ? 'bg-teal-800 text-teal-200' : 'bg-teal-100 text-teal-800'
+                    categoryFilter === 'Financial' ? 'bg-emerald-900 text-emerald-200' : 'bg-emerald-100 text-emerald-800'
                   }`}>
                     6
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleSetCategory('Project')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                    categoryFilter === 'Project'
+                      ? 'bg-indigo-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-indigo-900 hover:bg-indigo-50'
+                  }`}
+                >
+                  <KanbanSquare className="w-3 h-3 text-indigo-400" />
+                  <span>6. Project</span>
+                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                    categoryFilter === 'Project' ? 'bg-indigo-950 text-indigo-200' : 'bg-indigo-100 text-indigo-800'
+                  }`}>
+                    5
                   </span>
                 </button>
               </div>
@@ -462,6 +538,20 @@ export default function App() {
                     </optgroup>
                     <optgroup label="4. Operations & Process">
                       {OPERATIONS_TOOLS_DATA.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.shortName} — {t.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="5. Financial & Performance">
+                      {FINANCIAL_TOOLS_DATA.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.shortName} — {t.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="6. Project Management">
+                      {PROJECT_TOOLS_DATA.map(t => (
                         <option key={t.id} value={t.id}>
                           {t.shortName} — {t.name}
                         </option>
@@ -543,7 +633,7 @@ export default function App() {
                       {pillarMeta.pillarNumber}: {pillarMeta.pillarName}
                     </span>
                     <span className="text-2xs font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                      Tool #{currentIndex + 1} of 26
+                      Tool #{currentIndex + 1} of 37
                     </span>
                     <span className="text-2xs text-slate-500 font-medium hidden sm:inline">
                       Case: <span className="text-slate-700 font-semibold">{currentTool.caseStudy.company}</span>
@@ -586,7 +676,7 @@ export default function App() {
               {/* Optional Expandable Curriculum Blueprint Drawer */}
               {showCurriculumOverview && (
                 <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     {/* Pillar 1 */}
                     <div
                       onClick={() => handleSetCategory('Strategy')}
@@ -735,6 +825,47 @@ export default function App() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Pillar 5: Financial & Performance */}
+                    <div
+                      onClick={() => handleSetCategory('Financial')}
+                      className={`p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                        FINANCIAL_TOOLS_DATA.some(t => t.id === selectedToolId)
+                          ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
+                          : 'bg-slate-50/70 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between font-bold text-emerald-950 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span>5. Financial & Perf</span>
+                          <span className="bg-emerald-600 text-white text-3xs font-black px-1.5 py-0.2 rounded uppercase">
+                            New
+                          </span>
+                        </span>
+                        <span className="text-2xs bg-emerald-100 text-emerald-900 px-1.5 py-0.5 rounded font-mono font-bold">
+                          6 Tools
+                        </span>
+                      </div>
+                      <p className="text-2xs text-slate-500 mb-2">Break-Even, CBA & NPV, ZBB & Variances, CCC Cash, DuPont ROE & ABC</p>
+                      <div className="flex flex-wrap gap-1">
+                        {FINANCIAL_TOOLS_DATA.map(t => (
+                          <button
+                            key={t.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectTool(t.id);
+                            }}
+                            className={`px-1.5 py-0.5 text-3xs font-semibold rounded ${
+                              t.id === selectedToolId
+                                ? 'bg-emerald-900 text-white font-bold'
+                                : 'bg-white text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
+                            }`}
+                          >
+                            {t.shortName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -773,6 +904,14 @@ export default function App() {
             {selectedToolId === 'vsm' && <VSMSimulator />}
             {selectedToolId === 'bpr' && <BPRSimulator />}
             {selectedToolId === 'kanban' && <KanbanSimulator />}
+
+            {/* Category 5: Financial & Performance */}
+            {selectedToolId === 'breakeven' && <BreakEvenSimulator />}
+            {selectedToolId === 'costbenefit' && <CostBenefitSimulator />}
+            {selectedToolId === 'budgeting' && <BudgetingVarianceSimulator />}
+            {selectedToolId === 'workingcapital' && <WorkingCapitalSimulator />}
+            {selectedToolId === 'dupont' && <DuPontSimulator />}
+            {selectedToolId === 'abc' && <ActivityBasedCostingSimulator />}
           </div>
         )}
 
@@ -810,10 +949,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
             <p className="font-semibold text-slate-700">
-              StratLearn Enterprise Curriculum: Strategy, Business Model Innovation, Marketing & Operations
+              StratLearn Enterprise Curriculum: Strategy, Business Model Innovation, Marketing, Operations & Financial Performance
             </p>
             <p className="mt-0.5 text-slate-500">
-              Authored by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 26 Core Executive Frameworks across 4 Pillars
+              Authored by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 32 Core Executive Frameworks across 5 Pillars
             </p>
           </div>
 
@@ -822,13 +961,13 @@ export default function App() {
               onClick={() => setActiveMainTab('stacks')}
               className="hover:text-slate-900 transition-colors"
             >
-              Master Matrix (26)
+              Master Matrix (32)
             </button>
             <button
               onClick={() => setActiveMainTab('glossary')}
               className="hover:text-slate-900 transition-colors"
             >
-              Glossary (110+)
+              Glossary (140+)
             </button>
             <a
               href="https://sundaresh.blog"

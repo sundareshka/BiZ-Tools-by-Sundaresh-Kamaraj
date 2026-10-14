@@ -3,13 +3,17 @@ import { STRATEGY_GLOSSARY, GlossaryItem } from '../data/toolsData.ts';
 import { CATEGORY_2_GLOSSARY } from '../data/innovationToolsData.ts';
 import { CATEGORY_3_GLOSSARY } from '../data/marketingToolsData.ts';
 import { CATEGORY_4_GLOSSARY } from '../data/operationsToolsData.ts';
+import { CATEGORY_5_GLOSSARY } from '../data/financialToolsData.ts';
+import { CATEGORY_6_GLOSSARY } from '../data/projectToolsData.ts';
 import { Search, BookOpen, Layers } from 'lucide-react';
 
 const COMBINED_GLOSSARY: GlossaryItem[] = [
   ...STRATEGY_GLOSSARY,
   ...CATEGORY_2_GLOSSARY,
   ...CATEGORY_3_GLOSSARY,
-  ...CATEGORY_4_GLOSSARY
+  ...CATEGORY_4_GLOSSARY,
+  ...CATEGORY_5_GLOSSARY,
+  ...CATEGORY_6_GLOSSARY
 ];
 
 export function GlossaryView() {
@@ -43,7 +47,18 @@ export function GlossaryView() {
     'Kaizen',
     'Value Stream Mapping',
     'Business Process Reengineering',
-    'Kanban System'
+    'Kanban System',
+    'Break-Even Analysis',
+    'Cost-Benefit Analysis',
+    'Budgeting & Variance Analysis',
+    'Working Capital & CCC',
+    'DuPont Analysis',
+    'Activity-Based Costing',
+    'Gantt Chart',
+    'Critical Path (CPM)',
+    'PERT Chart',
+    'Agile Methodology',
+    'Scrum Framework'
   ];
 
   const filteredItems = COMBINED_GLOSSARY.filter(item => {
