@@ -5,6 +5,10 @@ import { MARKETING_TOOLS_DATA, CATEGORY_3_STACKS } from '../data/marketingToolsD
 import { OPERATIONS_TOOLS_DATA, CATEGORY_4_STACKS } from '../data/operationsToolsData.ts';
 import { FINANCIAL_TOOLS_DATA, CATEGORY_5_STACKS } from '../data/financialToolsData.ts';
 import { PROJECT_TOOLS_DATA, CATEGORY_6_STACKS } from '../data/projectToolsData.ts';
+import { HR_TOOLS_DATA, CATEGORY_7_STACKS } from '../data/hrToolsData.ts';
+import { RISK_TOOLS_DATA, CATEGORY_8_STACKS } from '../data/riskToolsData.ts';
+import { PRODUCT_TOOLS_DATA, CATEGORY_9_STACKS } from '../data/productToolsData.ts';
+import { ANALYTICS_TOOLS_DATA, CATEGORY_10_STACKS } from '../data/analyticsToolsData.ts';
 import { Layers, ArrowRight, CheckCircle2, Download, Printer, Filter, Sparkles } from 'lucide-react';
 
 const ALL_TOOLS = [
@@ -13,7 +17,11 @@ const ALL_TOOLS = [
   ...MARKETING_TOOLS_DATA,
   ...OPERATIONS_TOOLS_DATA,
   ...FINANCIAL_TOOLS_DATA,
-  ...PROJECT_TOOLS_DATA
+  ...PROJECT_TOOLS_DATA,
+  ...HR_TOOLS_DATA,
+  ...RISK_TOOLS_DATA,
+  ...PRODUCT_TOOLS_DATA,
+  ...ANALYTICS_TOOLS_DATA
 ];
 const ALL_STACKS = [
   ...STRATEGY_STACKS,
@@ -21,7 +29,11 @@ const ALL_STACKS = [
   ...CATEGORY_3_STACKS,
   ...CATEGORY_4_STACKS,
   ...CATEGORY_5_STACKS,
-  ...CATEGORY_6_STACKS
+  ...CATEGORY_6_STACKS,
+  ...CATEGORY_7_STACKS,
+  ...CATEGORY_8_STACKS,
+  ...CATEGORY_9_STACKS,
+  ...CATEGORY_10_STACKS
 ];
 
 export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: string) => void }) {
@@ -52,7 +64,7 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
             <span>Back Matter Guidance</span>
           </div>
           <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-            Compare all 37 frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial & Performance, and Project Management. Select the right tool stack for your organizational stage and chain frameworks into a cohesive annual strategy cycle.
+            Compare all 57 frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial Performance, Project Management, HR & Organizational, Risk & Decision-Making, Product & Startup, and Data & Analytics. Select the right tool stack for your organizational stage and chain frameworks into a cohesive annual strategy cycle.
           </p>
         </div>
 
@@ -149,7 +161,7 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h4 className="text-base font-bold text-slate-900">Master Comparison Matrix</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Filter across all 37 frameworks to match your immediate strategic question.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Filter across all 57 frameworks to match your immediate strategic question.</p>
           </div>
 
           {/* Filters */}
@@ -161,13 +173,17 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
                 onChange={(e) => setFilterCategory(e.target.value)}
                 className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-medium"
               >
-                <option value="All">All Categories (37)</option>
+                <option value="All">All Categories (57)</option>
                 <option value="Strategy & Planning">Strategy & Planning (8)</option>
                 <option value="Business Model & Innovation">Business Model & Innovation (6)</option>
                 <option value="Marketing & Growth">Marketing & Growth (6)</option>
                 <option value="Operations & Process">Operations & Process (6)</option>
                 <option value="Financial & Performance">Financial & Performance (6)</option>
                 <option value="Project Management">Project Management (5)</option>
+                <option value="HR & Organizational">HR & Organizational (5)</option>
+                <option value="Risk & Decision-Making">Risk & Decision-Making (5)</option>
+                <option value="Product & Startup">Product & Startup (5)</option>
+                <option value="Data & Analytics">Data & Analytics (5)</option>
               </select>
             </div>
 

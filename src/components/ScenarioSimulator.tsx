@@ -5,6 +5,10 @@ import { CATEGORY_3_SCENARIOS } from '../data/marketingToolsData.ts';
 import { CATEGORY_4_SCENARIOS } from '../data/operationsToolsData.ts';
 import { CATEGORY_5_SCENARIOS } from '../data/financialToolsData.ts';
 import { CATEGORY_6_SCENARIOS } from '../data/projectToolsData.ts';
+import { CATEGORY_7_SCENARIOS } from '../data/hrToolsData.ts';
+import { CATEGORY_8_SCENARIOS } from '../data/riskToolsData.ts';
+import { CATEGORY_9_SCENARIOS } from '../data/productToolsData.ts';
+import { CATEGORY_10_SCENARIOS } from '../data/analyticsToolsData.ts';
 import { Award, CheckCircle2, XCircle, ArrowRight, RotateCcw, AlertTriangle, Lightbulb, Compass, Filter } from 'lucide-react';
 
 const ALL_MISSIONS: ScenarioMission[] = [
@@ -13,11 +17,15 @@ const ALL_MISSIONS: ScenarioMission[] = [
   ...CATEGORY_3_SCENARIOS,
   ...CATEGORY_4_SCENARIOS,
   ...CATEGORY_5_SCENARIOS,
-  ...CATEGORY_6_SCENARIOS
+  ...CATEGORY_6_SCENARIOS,
+  ...CATEGORY_7_SCENARIOS,
+  ...CATEGORY_8_SCENARIOS,
+  ...CATEGORY_9_SCENARIOS,
+  ...CATEGORY_10_SCENARIOS
 ];
 
 export function ScenarioSimulator() {
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('All');
   const [selectedMissionId, setSelectedMissionId] = useState<string>(ALL_MISSIONS[0].id);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -30,6 +38,10 @@ export function ScenarioSimulator() {
     if (categoryFilter === 'Operations') return CATEGORY_4_SCENARIOS.some(om => om.id === m.id);
     if (categoryFilter === 'Financial') return CATEGORY_5_SCENARIOS.some(fm => fm.id === m.id);
     if (categoryFilter === 'Project') return CATEGORY_6_SCENARIOS.some(pm => pm.id === m.id);
+    if (categoryFilter === 'HR') return CATEGORY_7_SCENARIOS.some(hm => hm.id === m.id);
+    if (categoryFilter === 'Risk') return CATEGORY_8_SCENARIOS.some(rm => rm.id === m.id);
+    if (categoryFilter === 'Product') return CATEGORY_9_SCENARIOS.some(prm => prm.id === m.id);
+    if (categoryFilter === 'Analytics') return CATEGORY_10_SCENARIOS.some(am => am.id === m.id);
     return true;
   });
 
@@ -93,7 +105,7 @@ export function ScenarioSimulator() {
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-2xs font-bold uppercase tracking-wider text-slate-400">Category:</span>
-          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations', 'Financial', 'Project'] as const).map(cat => (
+          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations', 'Financial', 'Project', 'HR', 'Risk', 'Product', 'Analytics'] as const).map(cat => (
             <button
               key={cat}
               onClick={() => {
@@ -105,6 +117,10 @@ export function ScenarioSimulator() {
                   if (cat === 'Operations') return CATEGORY_4_SCENARIOS.some(om => om.id === m.id);
                   if (cat === 'Financial') return CATEGORY_5_SCENARIOS.some(fm => fm.id === m.id);
                   if (cat === 'Project') return CATEGORY_6_SCENARIOS.some(pm => pm.id === m.id);
+                  if (cat === 'HR') return CATEGORY_7_SCENARIOS.some(hm => hm.id === m.id);
+                  if (cat === 'Risk') return CATEGORY_8_SCENARIOS.some(rm => rm.id === m.id);
+                  if (cat === 'Product') return CATEGORY_9_SCENARIOS.some(prm => prm.id === m.id);
+                  if (cat === 'Analytics') return CATEGORY_10_SCENARIOS.some(am => am.id === m.id);
                   return true;
                 });
                 if (firstMatching) handleSelectMission(firstMatching.id);
@@ -127,7 +143,15 @@ export function ScenarioSimulator() {
                 ? `Operations (${CATEGORY_4_SCENARIOS.length})`
                 : cat === 'Financial'
                 ? `Financial (${CATEGORY_5_SCENARIOS.length})`
-                : `Project Management (${CATEGORY_6_SCENARIOS.length})`}
+                : cat === 'Project'
+                ? `Project Management (${CATEGORY_6_SCENARIOS.length})`
+                : cat === 'HR'
+                ? `HR & Org (${CATEGORY_7_SCENARIOS.length})`
+                : cat === 'Risk'
+                ? `Risk & Decision (${CATEGORY_8_SCENARIOS.length})`
+                : cat === 'Product'
+                ? `Product & Startup (${CATEGORY_9_SCENARIOS.length})`
+                : `Data & Analytics (${CATEGORY_10_SCENARIOS.length})`}
             </button>
           ))}
         </div>

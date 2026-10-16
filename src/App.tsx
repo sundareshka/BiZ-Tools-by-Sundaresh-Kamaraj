@@ -5,6 +5,10 @@ import { MARKETING_TOOLS_DATA } from './data/marketingToolsData.ts';
 import { OPERATIONS_TOOLS_DATA } from './data/operationsToolsData.ts';
 import { FINANCIAL_TOOLS_DATA } from './data/financialToolsData.ts';
 import { PROJECT_TOOLS_DATA } from './data/projectToolsData.ts';
+import { HR_TOOLS_DATA } from './data/hrToolsData.ts';
+import { RISK_TOOLS_DATA } from './data/riskToolsData.ts';
+import { PRODUCT_TOOLS_DATA } from './data/productToolsData.ts';
+import { ANALYTICS_TOOLS_DATA } from './data/analyticsToolsData.ts';
 
 // Category 1: Strategy & Planning Simulators
 import { SWOTSimulator } from './components/simulators/SWOTSimulator.tsx';
@@ -55,6 +59,34 @@ import { PertSimulator } from './components/simulators/PertSimulator.tsx';
 import { AgileSimulator } from './components/simulators/AgileSimulator.tsx';
 import { ScrumSimulator } from './components/simulators/ScrumSimulator.tsx';
 
+// Category 7: HR & Organizational Simulators
+import { McKinsey7SSimulator } from './components/simulators/McKinsey7SSimulator.tsx';
+import { RACISimulator } from './components/simulators/RACISimulator.tsx';
+import { EngagementSurveySimulator } from './components/simulators/EngagementSurveySimulator.tsx';
+import { PerformanceAppraisalSimulator } from './components/simulators/PerformanceAppraisalSimulator.tsx';
+import { CompetencyMappingSimulator } from './components/simulators/CompetencyMappingSimulator.tsx';
+
+// Category 8: Risk & Decision-Making Simulators
+import { RiskMatrixSimulator } from './components/simulators/RiskMatrixSimulator.tsx';
+import { DecisionTreeSimulator } from './components/simulators/DecisionTreeSimulator.tsx';
+import { MonteCarloSimulator } from './components/simulators/MonteCarloSimulator.tsx';
+import { ScenarioPlanningSimulator } from './components/simulators/ScenarioPlanningSimulator.tsx';
+import { ParetoAnalysisSimulator } from './components/simulators/ParetoAnalysisSimulator.tsx';
+
+// Category 9: Product & Startup Simulators
+import { MVPSimulator } from './components/simulators/MVPSimulator.tsx';
+import { ProductRoadmapSimulator } from './components/simulators/ProductRoadmapSimulator.tsx';
+import { UserStoryMappingSimulator } from './components/simulators/UserStoryMappingSimulator.tsx';
+import { ABTestingSimulator } from './components/simulators/ABTestingSimulator.tsx';
+import { ChurnAnalysisSimulator } from './components/simulators/ChurnAnalysisSimulator.tsx';
+
+// Category 10: Data & Analytics Simulators
+import { KPISimulator } from './components/simulators/KPISimulator.tsx';
+import { DashboardDesignerSimulator } from './components/simulators/DashboardDesignerSimulator.tsx';
+import { CohortRetentionSimulator } from './components/simulators/CohortRetentionSimulator.tsx';
+import { PredictiveAnalyticsSimulator } from './components/simulators/PredictiveAnalyticsSimulator.tsx';
+import { BIToolSimulator } from './components/simulators/BIToolSimulator.tsx';
+
 // Interactive Modules
 import { ScenarioSimulator } from './components/ScenarioSimulator.tsx';
 import { TrainingQuizModule } from './components/TrainingQuizModule.tsx';
@@ -79,7 +111,12 @@ import {
   HelpCircle,
   Building,
   Coins,
-  KanbanSquare
+  KanbanSquare,
+  Users,
+  AlertOctagon,
+  Flame,
+  Rocket,
+  BarChart3
 } from 'lucide-react';
 
 const ALL_TOOLS: ToolDefinition[] = [
@@ -88,13 +125,17 @@ const ALL_TOOLS: ToolDefinition[] = [
   ...MARKETING_TOOLS_DATA,
   ...OPERATIONS_TOOLS_DATA,
   ...FINANCIAL_TOOLS_DATA,
-  ...PROJECT_TOOLS_DATA
+  ...PROJECT_TOOLS_DATA,
+  ...HR_TOOLS_DATA,
+  ...RISK_TOOLS_DATA,
+  ...PRODUCT_TOOLS_DATA,
+  ...ANALYTICS_TOOLS_DATA
 ];
 
 export default function App() {
   const [activeMainTab, setActiveMainTab] = useState<'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary'>('simulators');
-  const [selectedToolId, setSelectedToolId] = useState<string>('gantt');
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project'>('Project');
+  const [selectedToolId, setSelectedToolId] = useState<string>('kpis');
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('Analytics');
   const [showCurriculumOverview, setShowCurriculumOverview] = useState<boolean>(false);
 
   const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
@@ -107,10 +148,14 @@ export default function App() {
     if (categoryFilter === 'Operations') return t.category.includes('Operations');
     if (categoryFilter === 'Financial') return t.category.includes('Financial');
     if (categoryFilter === 'Project') return t.category.includes('Project');
+    if (categoryFilter === 'HR') return t.category.includes('HR');
+    if (categoryFilter === 'Risk') return t.category.includes('Risk');
+    if (categoryFilter === 'Product') return t.category.includes('Product');
+    if (categoryFilter === 'Analytics') return t.category.includes('Analytics');
     return true;
   });
 
-  const handleSetCategory = (cat: 'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project') => {
+  const handleSetCategory = (cat: 'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics') => {
     setCategoryFilter(cat);
     if (cat === 'Strategy') {
       if (!TOOLS_DATA.some(t => t.id === selectedToolId)) {
@@ -136,6 +181,22 @@ export default function App() {
       if (!PROJECT_TOOLS_DATA.some(t => t.id === selectedToolId)) {
         setSelectedToolId('gantt');
       }
+    } else if (cat === 'HR') {
+      if (!HR_TOOLS_DATA.some(t => t.id === selectedToolId)) {
+        setSelectedToolId('mckinsey7s');
+      }
+    } else if (cat === 'Risk') {
+      if (!RISK_TOOLS_DATA.some(t => t.id === selectedToolId)) {
+        setSelectedToolId('riskmatrix');
+      }
+    } else if (cat === 'Product') {
+      if (!PRODUCT_TOOLS_DATA.some(t => t.id === selectedToolId)) {
+        setSelectedToolId('mvp');
+      }
+    } else if (cat === 'Analytics') {
+      if (!ANALYTICS_TOOLS_DATA.some(t => t.id === selectedToolId)) {
+        setSelectedToolId('kpis');
+      }
     }
   };
 
@@ -155,6 +216,14 @@ export default function App() {
         setCategoryFilter('All');
       } else if (categoryFilter === 'Project' && !tool.category.includes('Project')) {
         setCategoryFilter('All');
+      } else if (categoryFilter === 'HR' && !tool.category.includes('HR')) {
+        setCategoryFilter('All');
+      } else if (categoryFilter === 'Risk' && !tool.category.includes('Risk')) {
+        setCategoryFilter('All');
+      } else if (categoryFilter === 'Product' && !tool.category.includes('Product')) {
+        setCategoryFilter('All');
+      } else if (categoryFilter === 'Analytics' && !tool.category.includes('Analytics')) {
+        setCategoryFilter('All');
       }
     }
   };
@@ -171,6 +240,34 @@ export default function App() {
 
   // Helper for pillar styling
   const getToolPillarMeta = (tool: ToolDefinition) => {
+    if (tool.category.includes('Analytics')) {
+      return {
+        pillarNumber: 'Pillar 10',
+        pillarName: 'Data & Analytics',
+        badgeClass: 'bg-violet-50 text-violet-900 border-violet-300'
+      };
+    }
+    if (tool.category.includes('Product')) {
+      return {
+        pillarNumber: 'Pillar 9',
+        pillarName: 'Product & Startup',
+        badgeClass: 'bg-cyan-50 text-cyan-900 border-cyan-300'
+      };
+    }
+    if (tool.category.includes('Risk')) {
+      return {
+        pillarNumber: 'Pillar 8',
+        pillarName: 'Risk & Decision-Making',
+        badgeClass: 'bg-rose-50 text-rose-900 border-rose-300'
+      };
+    }
+    if (tool.category.includes('HR')) {
+      return {
+        pillarNumber: 'Pillar 7',
+        pillarName: 'HR & Organizational',
+        badgeClass: 'bg-purple-50 text-purple-900 border-purple-300'
+      };
+    }
     if (tool.category.includes('Project')) {
       return {
         pillarNumber: 'Pillar 6',
@@ -231,7 +328,7 @@ export default function App() {
                   StratLearn
                 </h1>
                 <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-900 tracking-wide font-mono">
-                  6 Pillars · 37 Tools
+                  10 Pillars · 57 Tools
                 </span>
               </div>
             </div>
@@ -274,7 +371,7 @@ export default function App() {
               <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
                 activeMainTab === 'scenarios' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'
               }`}>
-                23
+                44
               </span>
             </button>
             <button
@@ -290,7 +387,7 @@ export default function App() {
               <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
                 activeMainTab === 'quizzes' ? 'bg-slate-700 text-white' : 'bg-blue-100 text-blue-800'
               }`}>
-                185
+                285
               </span>
             </button>
             <button
@@ -317,7 +414,7 @@ export default function App() {
               <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
                 activeMainTab === 'glossary' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'
               }`}>
-                170+
+                350+
               </span>
             </button>
           </nav>
@@ -360,7 +457,7 @@ export default function App() {
               activeMainTab === 'scenarios' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
             }`}
           >
-            Missions (23)
+            Missions (44)
           </button>
           <button
             onClick={() => setActiveMainTab('quizzes')}
@@ -368,7 +465,7 @@ export default function App() {
               activeMainTab === 'quizzes' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
             }`}
           >
-            Quizzes (185)
+            Quizzes (285)
           </button>
           <button
             onClick={() => setActiveMainTab('stacks')}
@@ -408,7 +505,7 @@ export default function App() {
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  All 37
+                  All 57
                 </button>
                 <button
                   onClick={() => handleSetCategory('Strategy')}
@@ -478,6 +575,70 @@ export default function App() {
                   <span>6. Project</span>
                   <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
                     categoryFilter === 'Project' ? 'bg-indigo-950 text-indigo-200' : 'bg-indigo-100 text-indigo-800'
+                  }`}>
+                    5
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleSetCategory('HR')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                    categoryFilter === 'HR'
+                      ? 'bg-purple-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-purple-900 hover:bg-purple-50'
+                  }`}
+                >
+                  <Users className="w-3 h-3 text-purple-400" />
+                  <span>7. HR & Org</span>
+                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                    categoryFilter === 'HR' ? 'bg-purple-950 text-purple-200' : 'bg-purple-100 text-purple-800'
+                  }`}>
+                    5
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleSetCategory('Risk')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                    categoryFilter === 'Risk'
+                      ? 'bg-rose-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-rose-900 hover:bg-rose-50'
+                  }`}
+                >
+                  <AlertOctagon className="w-3 h-3 text-rose-400" />
+                  <span>8. Risk & Decision</span>
+                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                    categoryFilter === 'Risk' ? 'bg-rose-950 text-rose-200' : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    5
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleSetCategory('Product')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                    categoryFilter === 'Product'
+                      ? 'bg-cyan-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-cyan-900 hover:bg-cyan-50'
+                  }`}
+                >
+                  <Rocket className="w-3 h-3 text-cyan-400" />
+                  <span>9. Product & Startup</span>
+                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                    categoryFilter === 'Product' ? 'bg-cyan-950 text-cyan-200' : 'bg-cyan-100 text-cyan-800'
+                  }`}>
+                    5
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleSetCategory('Analytics')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                    categoryFilter === 'Analytics'
+                      ? 'bg-violet-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-violet-900 hover:bg-violet-50'
+                  }`}
+                >
+                  <BarChart3 className="w-3 h-3 text-violet-400" />
+                  <span>10. Data & Analytics</span>
+                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                    categoryFilter === 'Analytics' ? 'bg-violet-950 text-violet-200' : 'bg-violet-100 text-violet-800'
                   }`}>
                     5
                   </span>
@@ -552,6 +713,34 @@ export default function App() {
                     </optgroup>
                     <optgroup label="6. Project Management">
                       {PROJECT_TOOLS_DATA.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.shortName} — {t.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="7. HR & Organizational">
+                      {HR_TOOLS_DATA.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.shortName} — {t.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="8. Risk & Decision-Making">
+                      {RISK_TOOLS_DATA.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.shortName} — {t.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="9. Product & Startup">
+                      {PRODUCT_TOOLS_DATA.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.shortName} — {t.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="10. Data & Analytics">
+                      {ANALYTICS_TOOLS_DATA.map(t => (
                         <option key={t.id} value={t.id}>
                           {t.shortName} — {t.name}
                         </option>
@@ -633,7 +822,7 @@ export default function App() {
                       {pillarMeta.pillarNumber}: {pillarMeta.pillarName}
                     </span>
                     <span className="text-2xs font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                      Tool #{currentIndex + 1} of 37
+                      Tool #{currentIndex + 1} of {ALL_TOOLS.length}
                     </span>
                     <span className="text-2xs text-slate-500 font-medium hidden sm:inline">
                       Case: <span className="text-slate-700 font-semibold">{currentTool.caseStudy.company}</span>
@@ -676,7 +865,7 @@ export default function App() {
               {/* Optional Expandable Curriculum Blueprint Drawer */}
               {showCurriculumOverview && (
                 <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                     {/* Pillar 1 */}
                     <div
                       onClick={() => handleSetCategory('Strategy')}
@@ -866,6 +1055,47 @@ export default function App() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Pillar 6: Project Management */}
+                    <div
+                      onClick={() => handleSetCategory('Project')}
+                      className={`p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                        PROJECT_TOOLS_DATA.some(t => t.id === selectedToolId)
+                          ? 'bg-indigo-50/90 border-indigo-400 ring-2 ring-indigo-500/20 shadow-xs'
+                          : 'bg-slate-50/70 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between font-bold text-indigo-950 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span>6. Project Mgmt</span>
+                          <span className="bg-indigo-600 text-white text-3xs font-black px-1.5 py-0.2 rounded uppercase">
+                            New
+                          </span>
+                        </span>
+                        <span className="text-2xs bg-indigo-100 text-indigo-900 px-1.5 py-0.5 rounded font-mono font-bold">
+                          5 Tools
+                        </span>
+                      </div>
+                      <p className="text-2xs text-slate-500 mb-2">Gantt bar schedule, CPM float & crashing, PERT variance, Agile & Scrum</p>
+                      <div className="flex flex-wrap gap-1">
+                        {PROJECT_TOOLS_DATA.map(t => (
+                          <button
+                            key={t.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectTool(t.id);
+                            }}
+                            className={`px-1.5 py-0.5 text-3xs font-semibold rounded ${
+                              t.id === selectedToolId
+                                ? 'bg-indigo-900 text-white font-bold'
+                                : 'bg-white text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+                            }`}
+                          >
+                            {t.shortName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -912,6 +1142,41 @@ export default function App() {
             {selectedToolId === 'workingcapital' && <WorkingCapitalSimulator />}
             {selectedToolId === 'dupont' && <DuPontSimulator />}
             {selectedToolId === 'abc' && <ActivityBasedCostingSimulator />}
+
+            {/* Category 6: Project Management */}
+            {selectedToolId === 'gantt' && <GanttSimulator />}
+            {selectedToolId === 'cpm' && <CPMSimulator />}
+            {selectedToolId === 'pert' && <PertSimulator />}
+            {selectedToolId === 'agile' && <AgileSimulator />}
+            {selectedToolId === 'scrum' && <ScrumSimulator />}
+
+            {/* Category 7: HR & Organizational */}
+            {selectedToolId === 'mckinsey7s' && <McKinsey7SSimulator />}
+            {selectedToolId === 'raci' && <RACISimulator />}
+            {selectedToolId === 'engagement' && <EngagementSurveySimulator />}
+            {selectedToolId === 'appraisal' && <PerformanceAppraisalSimulator />}
+            {selectedToolId === 'competency' && <CompetencyMappingSimulator />}
+
+            {/* Category 8: Risk & Decision-Making */}
+            {selectedToolId === 'riskmatrix' && <RiskMatrixSimulator />}
+            {selectedToolId === 'decisiontree' && <DecisionTreeSimulator />}
+            {selectedToolId === 'montecarlo' && <MonteCarloSimulator />}
+            {selectedToolId === 'scenarioplanning' && <ScenarioPlanningSimulator />}
+            {selectedToolId === 'pareto' && <ParetoAnalysisSimulator />}
+
+            {/* Category 9: Product & Startup */}
+            {selectedToolId === 'mvp' && <MVPSimulator />}
+            {selectedToolId === 'productroadmap' && <ProductRoadmapSimulator />}
+            {selectedToolId === 'userstorymapping' && <UserStoryMappingSimulator />}
+            {selectedToolId === 'abtesting' && <ABTestingSimulator />}
+            {selectedToolId === 'churnanalysis' && <ChurnAnalysisSimulator />}
+
+            {/* Category 10: Data & Analytics */}
+            {selectedToolId === 'kpis' && <KPISimulator />}
+            {selectedToolId === 'dashboards' && <DashboardDesignerSimulator />}
+            {selectedToolId === 'cohort' && <CohortRetentionSimulator />}
+            {selectedToolId === 'predictive' && <PredictiveAnalyticsSimulator />}
+            {selectedToolId === 'bitools' && <BIToolSimulator />}
           </div>
         )}
 
@@ -949,10 +1214,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
             <p className="font-semibold text-slate-700">
-              StratLearn Enterprise Curriculum: Strategy, Business Model Innovation, Marketing, Operations & Financial Performance
+              StratLearn Enterprise Curriculum: Strategy, Innovation, Marketing, Operations, Finance, Project Management, HR, Risk, Product & Data Analytics
             </p>
             <p className="mt-0.5 text-slate-500">
-              Authored by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 32 Core Executive Frameworks across 5 Pillars
+              Authored by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
             </p>
           </div>
 
@@ -961,13 +1226,13 @@ export default function App() {
               onClick={() => setActiveMainTab('stacks')}
               className="hover:text-slate-900 transition-colors"
             >
-              Master Matrix (32)
+              Master Matrix (57)
             </button>
             <button
               onClick={() => setActiveMainTab('glossary')}
               className="hover:text-slate-900 transition-colors"
             >
-              Glossary (140+)
+              Glossary (350+)
             </button>
             <a
               href="https://sundaresh.blog"

@@ -1,6 +1,6 @@
 {
   "name": "StratLearn - Interactive Business Strategy & Planning Tools",
-  "description": "An interactive learning and simulation platform for 32 executive frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, and Financial & Performance (Break-Even, Cost-Benefit, Budgeting & Variance, Working Capital & CCC, DuPont Analysis, and Activity-Based Costing).",
+  "description": "An interactive learning and simulation platform for 57 executive frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial Performance, Project Management, HR & Organizational, Risk & Decision-Making, Product & Startup, and Data & Analytics (KPIs & Driver Trees, Executive Dashboard Design, Cohort Retention Analysis, Predictive Analytics, and Modern BI Star-Schema Modeling).",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

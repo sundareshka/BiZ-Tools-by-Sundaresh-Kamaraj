@@ -5,6 +5,10 @@ import { MARKETING_TOOLS_DATA } from '../data/marketingToolsData.ts';
 import { OPERATIONS_TOOLS_DATA } from '../data/operationsToolsData.ts';
 import { FINANCIAL_TOOLS_DATA } from '../data/financialToolsData.ts';
 import { PROJECT_TOOLS_DATA } from '../data/projectToolsData.ts';
+import { HR_TOOLS_DATA } from '../data/hrToolsData.ts';
+import { RISK_TOOLS_DATA } from '../data/riskToolsData.ts';
+import { PRODUCT_TOOLS_DATA } from '../data/productToolsData.ts';
+import { ANALYTICS_TOOLS_DATA } from '../data/analyticsToolsData.ts';
 import { CheckCircle2, XCircle, Award, RotateCcw, ArrowRight, BookOpen, Sparkles, Printer } from 'lucide-react';
 
 const ALL_TOOLS = [
@@ -13,11 +17,15 @@ const ALL_TOOLS = [
   ...MARKETING_TOOLS_DATA,
   ...OPERATIONS_TOOLS_DATA,
   ...FINANCIAL_TOOLS_DATA,
-  ...PROJECT_TOOLS_DATA
+  ...PROJECT_TOOLS_DATA,
+  ...HR_TOOLS_DATA,
+  ...RISK_TOOLS_DATA,
+  ...PRODUCT_TOOLS_DATA,
+  ...ANALYTICS_TOOLS_DATA
 ];
 
 export function TrainingQuizModule() {
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('All');
   const [selectedToolId, setSelectedToolId] = useState<string>('all');
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [showCertificate, setShowCertificate] = useState(false);
@@ -30,6 +38,10 @@ export function TrainingQuizModule() {
     if (categoryFilter === 'Operations') return t.category.includes('Operations');
     if (categoryFilter === 'Financial') return t.category.includes('Financial');
     if (categoryFilter === 'Project') return t.category.includes('Project');
+    if (categoryFilter === 'HR') return t.category.includes('HR');
+    if (categoryFilter === 'Risk') return t.category.includes('Risk');
+    if (categoryFilter === 'Product') return t.category.includes('Product');
+    if (categoryFilter === 'Analytics') return t.category.includes('Analytics');
     return true;
   });
 
@@ -50,6 +62,10 @@ export function TrainingQuizModule() {
     if (categoryFilter === 'Operations') return tool.category.includes('Operations');
     if (categoryFilter === 'Financial') return tool.category.includes('Financial');
     if (categoryFilter === 'Project') return tool.category.includes('Project');
+    if (categoryFilter === 'HR') return tool.category.includes('HR');
+    if (categoryFilter === 'Risk') return tool.category.includes('Risk');
+    if (categoryFilter === 'Product') return tool.category.includes('Product');
+    if (categoryFilter === 'Analytics') return tool.category.includes('Analytics');
     return true;
   });
 
@@ -94,13 +110,13 @@ export function TrainingQuizModule() {
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1">
             <span>Knowledge Verification</span>
             <span>·</span>
-            <span>185 Official Guide Questions (37 Tools across 6 Pillars)</span>
+            <span>285 Official Guide Questions (57 Tools across 10 Pillars)</span>
             <span>·</span>
             <span>Instant Theoretical Feedback</span>
           </div>
-          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Executive Strategy, Innovation, Marketing, Operations, Finance & Project Management Certification</h3>
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Executive Strategy, Innovation, Marketing, Operations, Finance, Project, HR, Risk, Product & Analytics Certification</h3>
           <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-            Test your understanding across all 37 business frameworks with authentic questions and detailed answer key explanations from the official training guides by Sundaresh Kamaraj.
+            Test your understanding across all 57 business frameworks with authentic questions and detailed answer key explanations from the official training guides by Sundaresh Kamaraj.
           </p>
         </div>
 
@@ -129,7 +145,7 @@ export function TrainingQuizModule() {
       <div className="space-y-2.5">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
           <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Pillar:</span>
-          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations', 'Financial', 'Project'] as const).map(cat => (
+          {(['All', 'Strategy', 'Innovation', 'Marketing', 'Operations', 'Financial', 'Project', 'HR', 'Risk', 'Product', 'Analytics'] as const).map(cat => (
             <button
               key={cat}
               onClick={() => {
@@ -142,7 +158,21 @@ export function TrainingQuizModule() {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {cat === 'All' ? 'All Pillars' : cat === 'Financial' ? 'Financial & Performance' : cat === 'Project' ? 'Project Management' : cat}
+              {cat === 'All'
+                ? 'All Pillars'
+                : cat === 'Financial'
+                ? 'Financial & Performance'
+                : cat === 'Project'
+                ? 'Project Management'
+                : cat === 'HR'
+                ? 'HR & Organizational'
+                : cat === 'Risk'
+                ? 'Risk & Decision'
+                : cat === 'Product'
+                ? 'Product & Startup'
+                : cat === 'Analytics'
+                ? 'Data & Analytics'
+                : cat}
             </button>
           ))}
         </div>

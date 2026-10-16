@@ -5,6 +5,10 @@ import { CATEGORY_3_GLOSSARY } from '../data/marketingToolsData.ts';
 import { CATEGORY_4_GLOSSARY } from '../data/operationsToolsData.ts';
 import { CATEGORY_5_GLOSSARY } from '../data/financialToolsData.ts';
 import { CATEGORY_6_GLOSSARY } from '../data/projectToolsData.ts';
+import { CATEGORY_7_GLOSSARY } from '../data/hrToolsData.ts';
+import { CATEGORY_8_GLOSSARY } from '../data/riskToolsData.ts';
+import { CATEGORY_9_GLOSSARY } from '../data/productToolsData.ts';
+import { CATEGORY_10_GLOSSARY } from '../data/analyticsToolsData.ts';
 import { Search, BookOpen, Layers } from 'lucide-react';
 
 const COMBINED_GLOSSARY: GlossaryItem[] = [
@@ -13,7 +17,11 @@ const COMBINED_GLOSSARY: GlossaryItem[] = [
   ...CATEGORY_3_GLOSSARY,
   ...CATEGORY_4_GLOSSARY,
   ...CATEGORY_5_GLOSSARY,
-  ...CATEGORY_6_GLOSSARY
+  ...CATEGORY_6_GLOSSARY,
+  ...CATEGORY_7_GLOSSARY,
+  ...CATEGORY_8_GLOSSARY,
+  ...CATEGORY_9_GLOSSARY,
+  ...CATEGORY_10_GLOSSARY
 ];
 
 export function GlossaryView() {
@@ -58,7 +66,27 @@ export function GlossaryView() {
     'Critical Path (CPM)',
     'PERT Chart',
     'Agile Methodology',
-    'Scrum Framework'
+    'Scrum Framework',
+    'McKinsey 7S',
+    'RACI Matrix',
+    'Engagement Surveys',
+    'Performance Appraisal',
+    'Competency Mapping',
+    'Risk Matrix',
+    'Decision Tree',
+    'Monte Carlo',
+    'Scenario Planning',
+    'Pareto Analysis',
+    'Minimum Viable Product',
+    'Product Roadmap',
+    'User Story Mapping',
+    'A/B Testing',
+    'Churn Analysis',
+    'Key Performance Indicators',
+    'Data Visualization Dashboards',
+    'Cohort Analysis',
+    'Predictive Analytics',
+    'Business Intelligence (BI) Tools'
   ];
 
   const filteredItems = COMBINED_GLOSSARY.filter(item => {
@@ -77,7 +105,7 @@ export function GlossaryView() {
           <span>·</span>
           <span>Back Matter Reference</span>
           <span>·</span>
-          <span>26 Terms</span>
+          <span>{COMBINED_GLOSSARY.length} Terms across 8 Pillars</span>
         </div>
         <h3 className="text-xl font-bold text-slate-900 tracking-tight">Strategic Management Glossary</h3>
         <p className="text-sm text-slate-600 max-w-2xl">
