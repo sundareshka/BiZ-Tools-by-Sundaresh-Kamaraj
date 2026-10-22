@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ToolDefinition } from '../data/toolsData.ts';
 import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, Clock, Layers, ArrowRight, Play, Sparkles } from 'lucide-react';
+import { useUserProgress } from '../utils/userProgress.ts';
 
 export function ToolDetailView({
   tool,
@@ -12,6 +13,7 @@ export function ToolDetailView({
   onLaunchQuiz: () => void;
 }) {
   const [activeSection, setActiveSection] = useState<'overview' | 'caseStudy' | 'implementation' | 'tips'>('overview');
+  const { isSimulatorDone, toggleSimulator, isQuizDone } = useUserProgress();
 
   return (
     <div className="space-y-6">
@@ -30,19 +32,36 @@ export function ToolDetailView({
             <p className="text-sm font-medium text-slate-600 mt-1">{tool.tagline}</p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <button
+              onClick={() => toggleSimulator(tool.id)}
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                isSimulatorDone(tool.id)
+                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold'
+                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-2xs'
+              }`}
+              title="Toggle simulator completion in localStorage"
+            >
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isSimulatorDone(tool.id) ? 'text-emerald-600' : 'text-slate-400'}`} />
+              <span>{isSimulatorDone(tool.id) ? 'Simulator Done' : 'Mark Sim Done'}</span>
+            </button>
             <button
               onClick={onLaunchSimulator}
               className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
             >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              Launch Interactive Simulator
+              <Play className="w-3.5 h-3.5 fill-current text-emerald-400" />
+              Launch Simulator
             </button>
             <button
               onClick={onLaunchQuiz}
-              className="px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
+                isQuizDone(tool.id)
+                  ? 'bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
             >
-              Take Quiz
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isQuizDone(tool.id) ? 'text-indigo-600' : 'text-slate-400'}`} />
+              <span>{isQuizDone(tool.id) ? 'Quiz Passed' : 'Take Quiz'}</span>
             </button>
           </div>
         </div>

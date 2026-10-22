@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TOOLS_DATA, QuizQuestion } from '../data/toolsData.ts';
 import { INNOVATION_TOOLS_DATA } from '../data/innovationToolsData.ts';
 import { MARKETING_TOOLS_DATA } from '../data/marketingToolsData.ts';
@@ -10,6 +10,7 @@ import { RISK_TOOLS_DATA } from '../data/riskToolsData.ts';
 import { PRODUCT_TOOLS_DATA } from '../data/productToolsData.ts';
 import { ANALYTICS_TOOLS_DATA } from '../data/analyticsToolsData.ts';
 import { CheckCircle2, XCircle, Award, RotateCcw, ArrowRight, BookOpen, Sparkles, Printer } from 'lucide-react';
+import { loadUserProgress, saveQuizAnswersAndCheckCompletion } from '../utils/userProgress.ts';
 
 const ALL_TOOLS = [
   ...TOOLS_DATA,
@@ -27,9 +28,18 @@ const ALL_TOOLS = [
 export function TrainingQuizModule() {
   const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('All');
   const [selectedToolId, setSelectedToolId] = useState<string>('all');
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<string, number>>(() => loadUserProgress().quizAnswers);
   const [showCertificate, setShowCertificate] = useState(false);
   const [userName, setUserName] = useState('Senior Strategy Associate');
+
+  // Listen for storage or progress resets
+  useEffect(() => {
+    const handleProgressUpdate = () => {
+      setAnswers(loadUserProgress().quizAnswers);
+    };
+    window.addEventListener('stratlearn_progress_updated', handleProgressUpdate);
+    return () => window.removeEventListener('stratlearn_progress_updated', handleProgressUpdate);
+  }, []);
 
   const toolsForPillar = ALL_TOOLS.filter(t => {
     if (categoryFilter === 'Strategy') return t.category.includes('Strategy');
@@ -76,7 +86,16 @@ export function TrainingQuizModule() {
   const filteredQuestionsCount = pillarQuestions.length;
 
   const handleSelectAnswer = (qId: string, optIdx: number) => {
-    setAnswers(prev => ({ ...prev, [qId]: optIdx }));
+    const nextAnswers = { ...answers, [qId]: optIdx };
+    setAnswers(nextAnswers);
+
+    // Map each tool to its question IDs to check which tool quizzes are complete
+    const toolQuestionsMap: Record<string, string[]> = {};
+    ALL_TOOLS.forEach(t => {
+      toolQuestionsMap[t.id] = t.quiz.map(q => q.id);
+    });
+
+    saveQuizAnswersAndCheckCompletion(nextAnswers, toolQuestionsMap);
   };
 
   const handleReset = () => {

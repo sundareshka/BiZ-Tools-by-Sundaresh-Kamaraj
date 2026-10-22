@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TOOLS_DATA, ToolDefinition } from './data/toolsData.ts';
 import { INNOVATION_TOOLS_DATA } from './data/innovationToolsData.ts';
 import { MARKETING_TOOLS_DATA } from './data/marketingToolsData.ts';
@@ -93,6 +93,9 @@ import { TrainingQuizModule } from './components/TrainingQuizModule.tsx';
 import { MasterComparisonView } from './components/MasterComparisonView.tsx';
 import { ToolDetailView } from './components/ToolDetailView.tsx';
 import { GlossaryView } from './components/GlossaryView.tsx';
+import { GlobalSearchModal } from './components/GlobalSearchModal.tsx';
+import { UserProgressIndicator } from './components/UserProgressIndicator.tsx';
+import { useUserProgress, setSimulatorComplete } from './utils/userProgress.ts';
 import {
   ExternalLink,
   ChevronRight,
@@ -116,7 +119,9 @@ import {
   AlertOctagon,
   Flame,
   Rocket,
-  BarChart3
+  BarChart3,
+  Search,
+  Trophy
 } from 'lucide-react';
 
 const ALL_TOOLS: ToolDefinition[] = [
@@ -137,6 +142,35 @@ export default function App() {
   const [selectedToolId, setSelectedToolId] = useState<string>('kpis');
   const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('Analytics');
   const [showCurriculumOverview, setShowCurriculumOverview] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+
+  // Persistent user learning progress hook
+  const { progress, toggleSimulator, isSimulatorDone, isQuizDone } = useUserProgress();
+
+  // Global hotkey to trigger search (Cmd+K / Ctrl+K or /)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+      } else if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Auto-mark simulator as completed when active in simulator tab (registers after brief engagement)
+  useEffect(() => {
+    if (activeMainTab === 'simulators' && selectedToolId) {
+      const timer = setTimeout(() => {
+        setSimulatorComplete(selectedToolId, true);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [activeMainTab, selectedToolId]);
 
   const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
   const currentIndex = ALL_TOOLS.findIndex(t => t.id === selectedToolId);
@@ -313,346 +347,216 @@ export default function App() {
   const pillarMeta = getToolPillarMeta(currentTool);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-slate-200">
-      {/* 1. Top Global Navigation Bar */}
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-slate-200 overflow-x-hidden w-full max-w-full">
+      {/* 1. Top Global Navigation Bar - Clean, Organized Executive Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Logo & Platform Info */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white font-extrabold text-sm tracking-tight shadow-xs">
-              SL
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-bold text-slate-900 tracking-tight text-base sm:text-lg leading-tight">
-                  StratLearn
-                </h1>
-                <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-900 tracking-wide font-mono">
-                  10 Pillars · 57 Tools
-                </span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="h-16 flex items-center justify-between gap-2 sm:gap-4">
+            {/* Left: Brand Identity */}
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-slate-900 to-indigo-950 flex items-center justify-center text-white font-black text-xs sm:text-sm tracking-tight shadow-xs border border-slate-800 shrink-0">
+                BT
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <h1 className="font-extrabold text-slate-900 tracking-tight text-lg sm:text-xl leading-none font-display">
+                    BuzToolz
+                  </h1>
+                  <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 tracking-wide font-mono hidden md:inline-block">
+                    57 Tools · 10 Pillars
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-2xs sm:text-xs text-slate-500 font-medium mt-0.5 sm:mt-1">
+                  <span>by</span>
+                  <a
+                    href="https://sundaresh.blog"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors hover:underline inline-flex items-center gap-0.5"
+                  >
+                    Sundaresh Kamaraj
+                    <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Primary View Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 text-xs font-semibold">
-            <button
-              onClick={() => setActiveMainTab('simulators')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'simulators'
-                  ? 'bg-slate-900 text-white font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <PlayCircle className="w-3.5 h-3.5" />
-              <span>Simulators</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('tools')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'tools'
-                  ? 'bg-slate-900 text-white font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Guides</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('scenarios')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'scenarios'
-                  ? 'bg-slate-900 text-white font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Missions</span>
-              <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
-                activeMainTab === 'scenarios' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'
-              }`}>
-                44
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('quizzes')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'quizzes'
-                  ? 'bg-slate-900 text-white font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Quizzes</span>
-              <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
-                activeMainTab === 'quizzes' ? 'bg-slate-700 text-white' : 'bg-blue-100 text-blue-800'
-              }`}>
-                285
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('stacks')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'stacks'
-                  ? 'bg-slate-900 text-white font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <GitCompare className="w-3.5 h-3.5" />
-              <span>Matrix & Stacks</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('glossary')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'glossary'
-                  ? 'bg-slate-900 text-white font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Glossary</span>
-              <span className={`text-3xs font-bold px-1.5 py-0.2 rounded-full ${
-                activeMainTab === 'glossary' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'
-              }`}>
-                350+
-              </span>
-            </button>
-          </nav>
+            {/* Center: Primary View Navigation Tabs (Clean segmented control for large screens) */}
+            <nav className="hidden xl:flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 text-xs font-semibold gap-0.5">
+              <button
+                onClick={() => setActiveMainTab('simulators')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  activeMainTab === 'simulators'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <PlayCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Simulators</span>
+              </button>
+              <button
+                onClick={() => setActiveMainTab('tools')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  activeMainTab === 'tools'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                <span>Guides</span>
+              </button>
+              <button
+                onClick={() => setActiveMainTab('scenarios')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  activeMainTab === 'scenarios'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                <span>Missions</span>
+                <span className="text-3xs font-mono font-bold text-slate-400">44</span>
+              </button>
+              <button
+                onClick={() => setActiveMainTab('quizzes')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  activeMainTab === 'quizzes'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Quizzes</span>
+                <span className="text-3xs font-mono font-bold text-slate-400">285</span>
+              </button>
+              <button
+                onClick={() => setActiveMainTab('stacks')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  activeMainTab === 'stacks'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <GitCompare className="w-3.5 h-3.5 text-purple-600" />
+                <span>Matrix</span>
+              </button>
+              <button
+                onClick={() => setActiveMainTab('glossary')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                  activeMainTab === 'glossary'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-slate-600" />
+                <span>Glossary</span>
+                <span className="text-3xs font-mono font-bold text-slate-400">350+</span>
+              </button>
+            </nav>
 
-          {/* External Action */}
-          <div className="flex items-center gap-2 shrink-0">
-            <a
-              href="https://sundaresh.blog"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5"
-            >
-              <span>sundaresh.blog</span>
-              <ExternalLink className="w-3 h-3 text-slate-400" />
-            </a>
+            {/* Right: Quick Search & Progress Hub */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Search Trigger */}
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/90 border border-slate-200/90 text-slate-500 hover:text-slate-800 text-xs px-2 sm:px-3 py-1.5 rounded-xl transition-all w-9 sm:w-36 md:w-44 justify-center sm:justify-between group shadow-2xs shrink-0"
+                title="Search 57 frameworks (Cmd+K or /)"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-colors shrink-0" />
+                  <span className="hidden sm:inline truncate text-slate-600 font-medium text-xs">Search...</span>
+                </div>
+                <kbd className="hidden sm:inline-flex items-center text-3xs font-mono font-semibold bg-white border border-slate-300 text-slate-500 px-1.5 py-0.2 rounded shadow-2xs">
+                  ⌘K
+                </kbd>
+              </button>
+
+              {/* User Progress Indicator */}
+              <UserProgressIndicator
+                allTools={ALL_TOOLS}
+                currentToolId={selectedToolId}
+                onSelectTool={(toolId, view) => {
+                  handleSelectTool(toolId);
+                  setActiveMainTab(view);
+                }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Mobile Navigation strip */}
-        <div className="md:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs font-medium">
+        {/* Secondary View Navigation (Clean horizontal strip for mobile/tablet screens < xl) */}
+        <div className="xl:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs font-semibold">
           <button
             onClick={() => setActiveMainTab('simulators')}
-            className={`px-2.5 py-1 rounded-md whitespace-nowrap ${
-              activeMainTab === 'simulators' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeMainTab === 'simulators' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
             }`}
           >
-            Simulators
+            <PlayCircle className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Simulators</span>
           </button>
           <button
             onClick={() => setActiveMainTab('tools')}
-            className={`px-2.5 py-1 rounded-md whitespace-nowrap ${
-              activeMainTab === 'tools' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeMainTab === 'tools' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
             }`}
           >
-            Guides
+            <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+            <span>Guides</span>
           </button>
           <button
             onClick={() => setActiveMainTab('scenarios')}
-            className={`px-2.5 py-1 rounded-md whitespace-nowrap ${
-              activeMainTab === 'scenarios' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeMainTab === 'scenarios' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
             }`}
           >
-            Missions (44)
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+            <span>Missions (44)</span>
           </button>
           <button
             onClick={() => setActiveMainTab('quizzes')}
-            className={`px-2.5 py-1 rounded-md whitespace-nowrap ${
-              activeMainTab === 'quizzes' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeMainTab === 'quizzes' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
             }`}
           >
-            Quizzes (285)
+            <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Quizzes (285)</span>
           </button>
           <button
             onClick={() => setActiveMainTab('stacks')}
-            className={`px-2.5 py-1 rounded-md whitespace-nowrap ${
-              activeMainTab === 'stacks' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeMainTab === 'stacks' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
             }`}
           >
-            Matrix
+            <GitCompare className="w-3.5 h-3.5 text-purple-500" />
+            <span>Matrix</span>
           </button>
           <button
             onClick={() => setActiveMainTab('glossary')}
-            className={`px-2.5 py-1 rounded-md whitespace-nowrap ${
-              activeMainTab === 'glossary' ? 'bg-slate-900 text-white font-bold' : 'text-slate-600'
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeMainTab === 'glossary' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
             }`}
           >
-            Glossary
+            <FileText className="w-3.5 h-3.5 text-slate-500" />
+            <span>Glossary</span>
           </button>
         </div>
       </header>
 
       {/* 2. Streamlined Executive Framework Control Bar (Simulators & Guides) */}
       {(activeMainTab === 'simulators' || activeMainTab === 'tools') && (
-        <div className="bg-white border-b border-slate-200 shadow-2xs">
+        <div className="bg-white border-b border-slate-200 shadow-2xs w-full">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Top Row: Pillar Segmented Filter + Tool Jump & Prev/Next */}
-            <div className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100">
-              {/* Pillar Switcher */}
-              <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
-                <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0 hidden lg:inline">
-                  Pillars:
-                </span>
-                <button
-                  onClick={() => handleSetCategory('All')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
-                    categoryFilter === 'All'
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                >
-                  All 57
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Strategy')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
-                    categoryFilter === 'Strategy'
-                      ? 'bg-blue-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-blue-900 hover:bg-blue-50'
-                  }`}
-                >
-                  1. Strategy <span className="opacity-70 text-2xs ml-0.5">(8)</span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Innovation')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
-                    categoryFilter === 'Innovation'
-                      ? 'bg-emerald-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-emerald-900 hover:bg-emerald-50'
-                  }`}
-                >
-                  2. Innovation <span className="opacity-70 text-2xs ml-0.5">(6)</span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Marketing')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
-                    categoryFilter === 'Marketing'
-                      ? 'bg-amber-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-amber-900 hover:bg-amber-50'
-                  }`}
-                >
-                  3. Marketing <span className="opacity-70 text-2xs ml-0.5">(6)</span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Operations')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
-                    categoryFilter === 'Operations'
-                      ? 'bg-teal-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-teal-900 hover:bg-teal-50'
-                  }`}
-                >
-                  4. Operations <span className="opacity-70 text-2xs ml-0.5">(6)</span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Financial')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                    categoryFilter === 'Financial'
-                      ? 'bg-emerald-800 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-emerald-900 hover:bg-emerald-50'
-                  }`}
-                >
-                  <Coins className="w-3 h-3 text-emerald-400" />
-                  <span>5. Financial</span>
-                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                    categoryFilter === 'Financial' ? 'bg-emerald-900 text-emerald-200' : 'bg-emerald-100 text-emerald-800'
-                  }`}>
-                    6
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Project')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                    categoryFilter === 'Project'
-                      ? 'bg-indigo-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-indigo-900 hover:bg-indigo-50'
-                  }`}
-                >
-                  <KanbanSquare className="w-3 h-3 text-indigo-400" />
-                  <span>6. Project</span>
-                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                    categoryFilter === 'Project' ? 'bg-indigo-950 text-indigo-200' : 'bg-indigo-100 text-indigo-800'
-                  }`}>
-                    5
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('HR')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                    categoryFilter === 'HR'
-                      ? 'bg-purple-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-purple-900 hover:bg-purple-50'
-                  }`}
-                >
-                  <Users className="w-3 h-3 text-purple-400" />
-                  <span>7. HR & Org</span>
-                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                    categoryFilter === 'HR' ? 'bg-purple-950 text-purple-200' : 'bg-purple-100 text-purple-800'
-                  }`}>
-                    5
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Risk')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                    categoryFilter === 'Risk'
-                      ? 'bg-rose-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-rose-900 hover:bg-rose-50'
-                  }`}
-                >
-                  <AlertOctagon className="w-3 h-3 text-rose-400" />
-                  <span>8. Risk & Decision</span>
-                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                    categoryFilter === 'Risk' ? 'bg-rose-950 text-rose-200' : 'bg-rose-100 text-rose-800'
-                  }`}>
-                    5
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Product')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                    categoryFilter === 'Product'
-                      ? 'bg-cyan-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-cyan-900 hover:bg-cyan-50'
-                  }`}
-                >
-                  <Rocket className="w-3 h-3 text-cyan-400" />
-                  <span>9. Product & Startup</span>
-                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                    categoryFilter === 'Product' ? 'bg-cyan-950 text-cyan-200' : 'bg-cyan-100 text-cyan-800'
-                  }`}>
-                    5
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleSetCategory('Analytics')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                    categoryFilter === 'Analytics'
-                      ? 'bg-violet-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-violet-900 hover:bg-violet-50'
-                  }`}
-                >
-                  <BarChart3 className="w-3 h-3 text-violet-400" />
-                  <span>10. Data & Analytics</span>
-                  <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                    categoryFilter === 'Analytics' ? 'bg-violet-950 text-violet-200' : 'bg-violet-100 text-violet-800'
-                  }`}>
-                    5
-                  </span>
-                </button>
-              </div>
-
-              {/* Framework Selector, Prev/Next & Simulator/Guide Toggle */}
-              <div className="flex items-center gap-2 shrink-0">
+            {/* Row 1: Framework Navigation, Dropdown Jump & Mode/Completion Controls */}
+            <div className="py-2.5 flex items-center justify-between gap-3 border-b border-slate-100 flex-wrap">
+              {/* Left: Prev/Next & Framework Quick Jump Dropdown */}
+              <div className="flex items-center gap-2 min-w-0 flex-1 sm:flex-initial">
                 {/* Prev / Next Pagination */}
-                <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50 shrink-0">
                   <button
                     onClick={handlePrevTool}
                     title="Previous Framework"
-                    className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors"
+                    className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -662,19 +566,19 @@ export default function App() {
                   <button
                     onClick={handleNextTool}
                     title="Next Framework"
-                    className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors"
+                    className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Quick Jump Dropdown */}
-                <div className="relative">
+                <div className="relative min-w-0 flex-1 sm:flex-initial">
                   <select
                     id="framework-select"
                     value={selectedToolId}
                     onChange={(e) => handleSelectTool(e.target.value)}
-                    className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs font-semibold rounded-lg pl-3 pr-8 py-1.5 focus:ring-2 focus:ring-slate-900 outline-none cursor-pointer transition-colors max-w-[190px] sm:max-w-[240px] truncate"
+                    className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs font-semibold rounded-lg pl-3 pr-8 py-1.5 focus:ring-2 focus:ring-slate-900 outline-none cursor-pointer transition-colors w-full max-w-[200px] sm:max-w-[260px] truncate"
                   >
                     <optgroup label="1. Strategy & Planning">
                       {TOOLS_DATA.map(t => (
@@ -749,12 +653,14 @@ export default function App() {
                   </select>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
+              </div>
 
-                {/* Direct Simulation / Guide Mode switcher */}
+              {/* Right: Direct Simulation / Guide Mode switcher & Completed Toggle */}
+              <div className="flex items-center gap-2 shrink-0">
                 <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                   <button
                     onClick={() => setActiveMainTab('simulators')}
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 ${
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                       activeMainTab === 'simulators'
                         ? 'bg-white text-slate-900 shadow-2xs font-bold'
                         : 'text-slate-600 hover:text-slate-900'
@@ -765,7 +671,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => setActiveMainTab('tools')}
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 ${
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                       activeMainTab === 'tools'
                         ? 'bg-white text-slate-900 shadow-2xs font-bold'
                         : 'text-slate-600 hover:text-slate-900'
@@ -775,7 +681,184 @@ export default function App() {
                     <span className="hidden sm:inline">Guide</span>
                   </button>
                 </div>
+
+                {/* Direct Progress Completion Toggle right beside Sim/Guide */}
+                <button
+                  onClick={() => toggleSimulator(selectedToolId)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    isSimulatorDone(selectedToolId)
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs font-bold ring-1 ring-emerald-400/40'
+                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs'
+                  }`}
+                  title={
+                    isSimulatorDone(selectedToolId)
+                      ? 'Simulator marked as completed in your learning progress (click to unmark)'
+                      : 'Click to mark this simulator completed in your learning progress'
+                  }
+                >
+                  <CheckCircle2
+                    className={`w-3.5 h-3.5 ${
+                      isSimulatorDone(selectedToolId) ? 'text-emerald-600 fill-emerald-100' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>
+                    {isSimulatorDone(selectedToolId) ? 'Completed' : 'Mark Done'}
+                  </span>
+                </button>
               </div>
+            </div>
+
+            {/* Row 2: 10 Pillars Segmented Filter (Dedicated Horizontal Scroll Rail) */}
+            <div className="py-2 flex items-center gap-1.5 overflow-x-auto min-w-0 w-full border-b border-slate-100 text-xs">
+              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">
+                Pillars:
+              </span>
+              <button
+                onClick={() => handleSetCategory('All')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  categoryFilter === 'All'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                All 57
+              </button>
+              <button
+                onClick={() => handleSetCategory('Strategy')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  categoryFilter === 'Strategy'
+                    ? 'bg-blue-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-blue-900 hover:bg-blue-50'
+                }`}
+              >
+                1. Strategy <span className="opacity-70 text-2xs ml-0.5">(8)</span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Innovation')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  categoryFilter === 'Innovation'
+                    ? 'bg-emerald-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-emerald-900 hover:bg-emerald-50'
+                }`}
+              >
+                2. Innovation <span className="opacity-70 text-2xs ml-0.5">(6)</span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Marketing')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  categoryFilter === 'Marketing'
+                    ? 'bg-amber-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-amber-900 hover:bg-amber-50'
+                }`}
+              >
+                3. Marketing <span className="opacity-70 text-2xs ml-0.5">(6)</span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Operations')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  categoryFilter === 'Operations'
+                    ? 'bg-teal-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-teal-900 hover:bg-teal-50'
+                }`}
+              >
+                4. Operations <span className="opacity-70 text-2xs ml-0.5">(6)</span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Financial')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  categoryFilter === 'Financial'
+                    ? 'bg-emerald-800 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-emerald-900 hover:bg-emerald-50'
+                }`}
+              >
+                <Coins className="w-3 h-3 text-emerald-400" />
+                <span>5. Financial</span>
+                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                  categoryFilter === 'Financial' ? 'bg-emerald-900 text-emerald-200' : 'bg-emerald-100 text-emerald-800'
+                }`}>
+                  6
+                </span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Project')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  categoryFilter === 'Project'
+                    ? 'bg-indigo-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-indigo-900 hover:bg-indigo-50'
+                }`}
+              >
+                <KanbanSquare className="w-3 h-3 text-indigo-400" />
+                <span>6. Project</span>
+                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                  categoryFilter === 'Project' ? 'bg-indigo-950 text-indigo-200' : 'bg-indigo-100 text-indigo-800'
+                }`}>
+                  5
+                </span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('HR')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  categoryFilter === 'HR'
+                    ? 'bg-purple-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-purple-900 hover:bg-purple-50'
+                }`}
+              >
+                <Users className="w-3 h-3 text-purple-400" />
+                <span>7. HR & Org</span>
+                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                  categoryFilter === 'HR' ? 'bg-purple-950 text-purple-200' : 'bg-purple-100 text-purple-800'
+                }`}>
+                  5
+                </span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Risk')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  categoryFilter === 'Risk'
+                    ? 'bg-rose-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-rose-900 hover:bg-rose-50'
+                }`}
+              >
+                <AlertOctagon className="w-3 h-3 text-rose-400" />
+                <span>8. Risk & Decision</span>
+                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                  categoryFilter === 'Risk' ? 'bg-rose-950 text-rose-200' : 'bg-rose-100 text-rose-800'
+                }`}>
+                  5
+                </span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Product')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  categoryFilter === 'Product'
+                    ? 'bg-cyan-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-cyan-900 hover:bg-cyan-50'
+                }`}
+              >
+                <Rocket className="w-3 h-3 text-cyan-400" />
+                <span>9. Product & Startup</span>
+                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                  categoryFilter === 'Product' ? 'bg-cyan-950 text-cyan-200' : 'bg-cyan-100 text-cyan-800'
+                }`}>
+                  5
+                </span>
+              </button>
+              <button
+                onClick={() => handleSetCategory('Analytics')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  categoryFilter === 'Analytics'
+                    ? 'bg-violet-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-violet-900 hover:bg-violet-50'
+                }`}
+              >
+                <BarChart3 className="w-3 h-3 text-violet-400" />
+                <span>10. Data & Analytics</span>
+                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
+                  categoryFilter === 'Analytics' ? 'bg-violet-950 text-violet-200' : 'bg-violet-100 text-violet-800'
+                }`}>
+                  5
+                </span>
+              </button>
             </div>
 
             {/* Bottom Row: Focused Tool Chips for the Active Pillar (Clean, not noisy) */}
@@ -783,6 +866,8 @@ export default function App() {
               {filteredTools.map((tool) => {
                 const isSelected = tool.id === selectedToolId;
                 const globalIdx = ALL_TOOLS.findIndex(t => t.id === tool.id) + 1;
+                const isSimDone = isSimulatorDone(tool.id);
+                const isQzDone = isQuizDone(tool.id);
 
                 return (
                   <button
@@ -800,6 +885,12 @@ export default function App() {
                       #{globalIdx}
                     </span>
                     <span>{tool.shortName}</span>
+                    {isSimDone && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Simulator completed" />
+                    )}
+                    {isQzDone && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" title="Quiz completed" />
+                    )}
                   </button>
                 );
               })}
@@ -836,7 +927,21 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
+                <div className="flex items-center gap-2 shrink-0 self-start md:self-center flex-wrap">
+                  {/* Interactive Simulator Completion Toggle (localStorage) */}
+                  <button
+                    onClick={() => toggleSimulator(currentTool.id)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isSimulatorDone(currentTool.id)
+                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200 shadow-2xs font-bold'
+                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-2xs'
+                    }`}
+                    title={isSimulatorDone(currentTool.id) ? 'Simulator completed in localStorage (click to toggle)' : 'Mark this simulator as completed'}
+                  >
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${isSimulatorDone(currentTool.id) ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    <span>{isSimulatorDone(currentTool.id) ? 'Simulator Completed' : 'Mark Completed'}</span>
+                  </button>
+
                   <button
                     onClick={() => setActiveMainTab('tools')}
                     className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5"
@@ -848,8 +953,8 @@ export default function App() {
                     onClick={() => setActiveMainTab('quizzes')}
                     className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Quiz (5 Qs)</span>
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${isQuizDone(currentTool.id) ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <span>{isQuizDone(currentTool.id) ? 'Quiz Passed' : 'Quiz (5 Qs)'}</span>
                   </button>
                   <button
                     onClick={() => setShowCurriculumOverview(!showCurriculumOverview)}
@@ -1214,10 +1319,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
             <p className="font-semibold text-slate-700">
-              StratLearn Enterprise Curriculum: Strategy, Innovation, Marketing, Operations, Finance, Project Management, HR, Risk, Product & Data Analytics
+              BuzToolz · Executive Strategy, Operations, Finance, Product & Data Analytics Platform
             </p>
             <p className="mt-0.5 text-slate-500">
-              Authored by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
+              by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
             </p>
           </div>
 
@@ -1245,6 +1350,19 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Global Search & Command Palette Modal */}
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        tools={ALL_TOOLS}
+        onSelectTool={(id, view) => {
+          handleSelectTool(id);
+          if (view) {
+            setActiveMainTab(view);
+          }
+        }}
+      />
     </div>
   );
 }
