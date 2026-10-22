@@ -1,18 +1,50 @@
+
 name: Build & Deploy to cPanel
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # ── 1. Checkout ────────────────────────────────────────────────
+      # 1. Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ── 2. Upload frontend source to a separate, locked-down folder ─
-      - name: Upload frontend source to cPanel (backup folder)
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      # 4. Build frontend
+      - name: Build frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.APP_URL }}
+
+      # 5. Verify build output
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "ERROR: dist directory was not created."
+            exit 1
+          fi
+          echo "Build completed successfully."
+          ls -la dist
+
+      # 6. Upload source files to the backup/source directory
+      - name: Upload source to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -23,30 +55,20 @@ jobs:
           security: loose
           local-dir: ./
           server-dir: /
-          state-name: .ftp-state-frontend-source.json
+          state-name: .ftp-state-source.json
           dangerous-clean-slate: false
           exclude: |
             **/.git*
-            
+            **/.git*/**
+            **/node_modules/**
+            **/dist/**
+            **/.env
+            **/.env.*
+            !**/.env.example
+            **/.github/**
 
-      # ── 3. Setup Node & Install ────────────────────────────────────
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      # ── 4. Clean old dist & Build fresh ───────────────────────────
-      - name: Clean old dist and build fresh
-        run: rm -rf dist && npm run build
-        env:
-          VITE_API_URL: ${{ secrets.APP_URL }}
-
-      # ── 5. Upload dist/ build output to the LIVE site folder ───────
-      - name: Upload frontend build (dist/) to cPanel
+      # 7. Upload production build to the website directory
+      - name: Deploy production build to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -57,9 +79,8 @@ jobs:
           security: loose
           local-dir: ./dist/
           server-dir: /dist/
-          state-name: .ftp-state-frontend-build.json
+          state-name: .ftp-state-production.json
           dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.git*/**
-            
