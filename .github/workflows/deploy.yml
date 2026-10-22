@@ -1,0 +1,65 @@
+name: Build & Deploy to cPanel
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Upload frontend source to a separate, locked-down folder ─
+      - name: Upload frontend source to cPanel (backup folder)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          security: loose
+          local-dir: ./
+          server-dir: /
+          state-name: .ftp-state-frontend-source.json
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            
+
+      # ── 3. Setup Node & Install ────────────────────────────────────
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # ── 4. Clean old dist & Build fresh ───────────────────────────
+      - name: Clean old dist and build fresh
+        run: rm -rf dist && npm run build
+        env:
+          VITE_API_URL: ${{ secrets.APP_URL }}
+
+      # ── 5. Upload dist/ build output to the LIVE site folder ───────
+      - name: Upload frontend build (dist/) to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          security: loose
+          local-dir: ./dist/
+          server-dir: /dist/
+          state-name: .ftp-state-frontend-build.json
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            
