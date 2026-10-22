@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ToolDefinition } from '../data/toolsData.ts';
+import { getToolIcon } from '../data/toolIcons.ts';
 import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, Clock, Layers, ArrowRight, Play, Sparkles, Download } from 'lucide-react';
 import { useUserProgress } from '../utils/userProgress.ts';
 
@@ -16,6 +17,7 @@ export function ToolDetailView({
 }) {
   const [activeSection, setActiveSection] = useState<'overview' | 'caseStudy' | 'implementation' | 'tips'>('overview');
   const { isSimulatorDone, toggleSimulator, isQuizDone } = useUserProgress();
+  const ToolIcon = tool.icon || getToolIcon(tool.id);
 
   return (
     <div className="space-y-6">
@@ -30,7 +32,12 @@ export function ToolDetailView({
               <span>·</span>
               <span>Horizon: {tool.horizon}</span>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{tool.name}</h2>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shrink-0">
+                <ToolIcon className="w-4 h-4" />
+              </div>
+              <span>{tool.name}</span>
+            </h2>
             <p className="text-sm font-medium text-slate-600 mt-1">{tool.tagline}</p>
           </div>
 

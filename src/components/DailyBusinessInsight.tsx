@@ -7,10 +7,7 @@ import {
   CheckCircle2,
   Copy,
   Check,
-  TrendingUp,
   Target,
-  Compass,
-  Coins,
   PlayCircle,
   ExternalLink,
   BookOpen
@@ -30,13 +27,15 @@ interface DailyBusinessInsightProps {
   onSelectTool: (toolId: string, view: 'simulators' | 'tools') => void;
 }
 
-const CATEGORY_CHIPS = [
+const CATEGORY_TABS = [
   { label: 'All Disciplines', value: '' },
   { label: 'Strategy', value: 'Strategy & Market Positioning' },
   { label: 'Innovation', value: 'Business Model Innovation' },
-  { label: 'Finance', value: 'Financial Performance' },
+  { label: 'Financial', value: 'Financial Performance' },
   { label: 'Operations', value: 'Operations & Process' },
-  { label: 'Growth', value: 'Marketing & Growth' },
+  { label: 'Marketing', value: 'Marketing & Growth' },
+  { label: 'Risk', value: 'Risk & Decision-Making' },
+  { label: 'Analytics', value: 'Data & Analytics' },
 ];
 
 export function DailyBusinessInsight({ onSelectTool }: DailyBusinessInsightProps) {
@@ -46,23 +45,25 @@ export function DailyBusinessInsight({ onSelectTool }: DailyBusinessInsightProps
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [insightSource, setInsightSource] = useState<string>('gemini-3.8-flash');
 
-  const fetchInsight = async (cat?: string, forceRefresh = false) => {
+  const fetchInsight = async (categoryFilter?: string, forceRefresh = false) => {
     setLoading(true);
-    const todayKey = `biztools_daily_insight_${new Date().toISOString().slice(0, 10)}`;
+    const sessionKey = 'biztools_session_daily_insight';
 
-    // If not force refreshed and no custom category, try to load session cache
-    if (!forceRefresh && !cat) {
+    // In a session, retain the current insight unless forced to refresh or changing category
+    if (!forceRefresh && !categoryFilter) {
       try {
-        const cached = sessionStorage.getItem(todayKey);
+        const cached = sessionStorage.getItem(sessionKey);
         if (cached) {
           const parsed = JSON.parse(cached);
-          setInsight(parsed.insight);
-          setInsightSource(parsed.source || 'gemini-3.8-flash');
-          setLoading(false);
-          return;
+          if (parsed?.insight) {
+            setInsight(parsed.insight);
+            setInsightSource(parsed.source || 'gemini-3.8-flash');
+            setLoading(false);
+            return;
+          }
         }
       } catch {
-        // ignore cache read failure
+        // Continue to API fetch if storage read fails
       }
     }
 
@@ -73,7 +74,7 @@ export function DailyBusinessInsight({ onSelectTool }: DailyBusinessInsightProps
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          requestedCategory: cat || undefined,
+          requestedCategory: categoryFilter || undefined,
         }),
       });
 
@@ -85,29 +86,27 @@ export function DailyBusinessInsight({ onSelectTool }: DailyBusinessInsightProps
       if (data.success && data.insight) {
         setInsight(data.insight);
         setInsightSource(data.source || 'gemini-3.8-flash');
-        // Save to cache if default category
-        if (!cat) {
+        if (!categoryFilter) {
           try {
             sessionStorage.setItem(
-              todayKey,
+              sessionKey,
               JSON.stringify({ insight: data.insight, source: data.source })
             );
           } catch {
-            // ignore cache write error
+            // Ignore sessionStorage quota error
           }
         }
       }
     } catch (err) {
-      console.warn('Failed to fetch daily insight from API:', err);
-      // Fallback local insight if server call fails
+      console.warn('Failed to fetch daily insight from API, falling back gracefully:', err);
       setInsight({
         frameworkName: 'SWOT & TOWS Matrix',
         frameworkId: 'swot',
-        category: 'Strategy & Planning',
+        category: 'Strategy & Market Positioning',
         headline: 'Pair internal strengths with external market shocks',
         tip: 'A standard SWOT is passive inventory; a TOWS matrix turns it actionable. Pair your strongest core capabilities with external disruptions (WT and SO strategies) to seize non-obvious white space before competitors react.',
         actionItem: 'Pick your top 2 organizational strengths and draft one specific offensive play against a rising macro trend.',
-        quote: 'Strategy is about making choices, trade-offs; it is about deliberately choosing to be different.',
+        quote: 'Strategy is about making choices, trade-offs; it’s about deliberately choosing to be different.',
       });
       setInsightSource('curated-offline');
     } finally {
@@ -126,13 +125,13 @@ export function DailyBusinessInsight({ onSelectTool }: DailyBusinessInsightProps
 
   const handleCopy = () => {
     if (!insight) return;
-    const text = `💡 Daily Business Insight (BizTools)
-Framework: ${insight.frameworkName} (${insight.category})
-Headline: ${insight.headline}
+    const text = `💡 Daily Business Insight (BizTools by Sundaresh Kamaraj)
+Framework: ${insight.frameworkName} · ${insight.category}
+"${insight.headline}"
 
 ${insight.tip}
 
-⚡ Today's Action Item: ${insight.actionItem}
+⚡ Today's Tactical Execution: ${insight.actionItem}
 
 "${insight.quote}"`;
 
@@ -142,44 +141,50 @@ ${insight.tip}
   };
 
   return (
-    <section className="bg-linear-to-br from-slate-900 via-slate-900 to-indigo-950 text-white rounded-2xl border border-slate-800 p-5 sm:p-7 shadow-xl relative overflow-hidden">
-      {/* Decorative background glow accents */}
-      <div className="absolute -right-16 -top-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+    <section className="bg-slate-900 text-white rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-xl relative overflow-hidden">
+      {/* Background radial accent */}
+      <div
+        className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)`,
+          backgroundSize: '24px 24px',
+        }}
+      />
 
-      {/* Header Band */}
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
-            <Lightbulb className="w-4 h-4" />
+      {/* Header Bar */}
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center text-indigo-400 shrink-0">
+            <Lightbulb className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-1.5">
-                <span>Daily Business Insight</span>
+              <h3 className="text-lg font-bold text-white tracking-tight font-display">
+                Daily Business Insight
               </h3>
-              <span className="text-3xs font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5 text-emerald-400" />
-                Gemini AI
+              <span className="text-slate-500" aria-hidden="true">·</span>
+              <span className="text-xs font-mono font-medium text-emerald-400 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-emerald-400" />
+                Gemini API
               </span>
             </div>
-            <p className="text-2xs text-slate-400">
-              Curated strategic principle to kick off your decision-making session
+            <p className="text-xs text-slate-400">
+              Concise executive strategy tip generated to start your session with fresh perspective
             </p>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 self-start sm:self-center">
+        {/* Action Controls */}
+        <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
           <button
             onClick={handleCopy}
-            className="px-2.5 py-1.5 text-2xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
             title="Copy insight text to clipboard"
           >
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-300 font-bold">Copied!</span>
+                <span className="text-emerald-300 font-bold">Copied</span>
               </>
             ) : (
               <>
@@ -192,122 +197,125 @@ ${insight.tip}
           <button
             onClick={() => fetchInsight(selectedCategory, true)}
             disabled={loading}
-            className="px-3 py-1.5 text-2xs font-bold text-indigo-200 bg-indigo-900/60 hover:bg-indigo-800/80 border border-indigo-700/60 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs hover:border-indigo-500 disabled:opacity-50"
-            title="Generate a randomized new business tip using Gemini API"
+            className="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+            title="Generate a fresh randomized business tip via Gemini API"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-300' : 'text-indigo-400'}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>{loading ? 'Consulting Gemini...' : 'New Tip'}</span>
           </button>
         </div>
       </div>
 
-      {/* Discipline Filter Chips */}
-      <div className="relative z-10 pt-3 pb-1 flex items-center gap-1.5 overflow-x-auto text-2xs">
-        <span className="text-3xs font-extrabold uppercase tracking-wider text-slate-500 mr-1 shrink-0">
+      {/* Category Filter Tabs (Clean Segmented Control) */}
+      <div className="relative z-10 pt-4 pb-2 flex items-center gap-1.5 overflow-x-auto text-xs">
+        <span className="text-3xs font-bold uppercase tracking-wider text-slate-500 mr-1 shrink-0">
           Focus:
         </span>
-        {CATEGORY_CHIPS.map((chip) => {
-          const isActive = selectedCategory === chip.value;
-          return (
-            <button
-              key={chip.label}
-              onClick={() => handleCategoryChange(chip.value)}
-              className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-indigo-500 text-white font-bold shadow-xs'
-                  : 'bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800'
-              }`}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
+        <div className="flex items-center gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80">
+          {CATEGORY_TABS.map((tab) => {
+            const isActive = selectedCategory === tab.value;
+            return (
+              <button
+                key={tab.label}
+                onClick={() => handleCategoryChange(tab.value)}
+                className={`px-3 py-1 text-xs font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                  isActive
+                    ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Main Insight Content Card */}
-      <div className="relative z-10 mt-3 pt-3 border-t border-slate-800/60">
+      {/* Main Insight Card Content */}
+      <div className="relative z-10 mt-2 pt-3 border-t border-slate-800/60">
         {loading ? (
-          <div className="py-6 space-y-3 animate-pulse">
-            <div className="flex gap-2">
-              <div className="h-4 w-28 bg-slate-800 rounded" />
-              <div className="h-4 w-36 bg-slate-800 rounded" />
+          <div className="py-8 space-y-4 animate-pulse">
+            <div className="h-4 w-40 bg-slate-800 rounded" />
+            <div className="h-7 w-3/4 bg-slate-800 rounded" />
+            <div className="h-14 w-full bg-slate-800/60 rounded-xl" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+              <div className="h-16 bg-slate-800/40 rounded-xl" />
+              <div className="h-16 bg-slate-800/40 rounded-xl" />
             </div>
-            <div className="h-6 w-3/4 bg-slate-800 rounded" />
-            <div className="h-12 w-full bg-slate-800/60 rounded" />
-            <div className="h-10 w-full bg-slate-800/40 rounded" />
           </div>
         ) : insight ? (
           <div className="space-y-4">
-            {/* Meta Tags */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-3xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">
-                {insight.category}
-              </span>
+            {/* Metadata Line (Zero-Pill Discipline) */}
+            <div className="flex items-center gap-2 text-xs text-slate-400 flex-wrap">
+              <span className="font-semibold text-indigo-300">{insight.category}</span>
+              <span aria-hidden="true">·</span>
               <button
                 onClick={() => onSelectTool(insight.frameworkId || 'swot', 'tools')}
-                className="text-3xs font-semibold px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
-                title="View deep framework guide"
+                className="font-medium text-slate-300 hover:text-white hover:underline flex items-center gap-1 cursor-pointer"
+                title="Open framework guide"
               >
                 <span>Framework: {insight.frameworkName}</span>
-                <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
+                <ExternalLink className="w-2.5 h-2.5 opacity-70" />
               </button>
+              <span aria-hidden="true">·</span>
+              <span className="text-3xs font-mono text-slate-500">
+                Model: {insightSource}
+              </span>
             </div>
 
             {/* Headline */}
             <div>
-              <h4 className="text-lg sm:text-xl font-extrabold text-white tracking-tight leading-snug font-display">
+              <h4 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-snug font-display text-balance">
                 "{insight.headline}"
               </h4>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed font-normal">
+              <p className="text-sm text-slate-300 mt-2 leading-relaxed">
                 {insight.tip}
               </p>
             </div>
 
-            {/* Two-Column Callouts: Action Item & Strategic Axiom */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-1">
-              {/* Action Item */}
-              <div className="md:col-span-7 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-start gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+            {/* Tactical Execution & Strategic Axiom Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2">
+              {/* Tactical Execution */}
+              <div className="md:col-span-7 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xs font-mono uppercase tracking-wider text-emerald-300 font-bold block">
+                  <span className="text-3xs font-mono uppercase tracking-wider text-emerald-400 font-bold block">
                     Today's Tactical Execution
                   </span>
-                  <p className="text-2xs text-emerald-100 font-medium mt-0.5 leading-normal">
+                  <p className="text-xs text-emerald-100 font-medium mt-1 leading-relaxed">
                     {insight.actionItem}
                   </p>
                 </div>
               </div>
 
-              {/* Strategic Quote */}
-              <div className="md:col-span-5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/60 flex items-start gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
-                  <Target className="w-3.5 h-3.5" />
+              {/* Strategic Axiom */}
+              <div className="md:col-span-5 p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <Target className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xs font-mono uppercase tracking-wider text-indigo-300 font-bold block">
+                  <span className="text-3xs font-mono uppercase tracking-wider text-indigo-400 font-bold block">
                     Strategic Axiom
                   </span>
-                  <p className="text-2xs text-slate-300 italic mt-0.5 leading-normal">
+                  <p className="text-xs text-slate-300 italic mt-1 leading-relaxed">
                     "{insight.quote}"
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Bottom Launch Bar */}
-            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-2xs text-slate-400 border-t border-slate-800/80">
-              <div className="flex items-center gap-1.5 text-3xs font-mono text-slate-500">
-                <span>Model: {insightSource}</span>
-                <span>·</span>
-                <span>BizTools Curriculum</span>
-              </div>
+            {/* Bottom Actions: Guides and Interactive Simulator */}
+            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-800/80">
+              <span className="text-xs text-slate-500 font-mono">
+                57 Executive Simulators · 10 Disciplines
+              </span>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => onSelectTool(insight.frameworkId || 'swot', 'tools')}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <BookOpen className="w-3.5 h-3.5 text-slate-400" />
                   <span>Framework Guide</span>
@@ -315,11 +323,11 @@ ${insight.tip}
 
                 <button
                   onClick={() => onSelectTool(insight.frameworkId || 'swot', 'simulators')}
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-900 bg-white hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow"
+                  className="px-4 py-2 text-xs font-bold text-slate-950 bg-white hover:bg-slate-100 rounded-xl transition-colors flex items-center gap-2 cursor-pointer shadow-sm hover:shadow"
                 >
-                  <PlayCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Launch {insight.frameworkName.split(' ')[0]} Simulator</span>
-                  <ArrowRight className="w-3 h-3 text-slate-700" />
+                  <PlayCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Launch Simulator</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
                 </button>
               </div>
             </div>

@@ -11,6 +11,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
+import { getToolIcon } from '../data/toolIcons.ts';
 import { useUserProgress } from '../utils/userProgress.ts';
 
 interface GlobalSearchModalProps {
@@ -279,14 +280,22 @@ export function GlobalSearchModal({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">
-                        {highlightMatch(tool.shortName, query)}
-                        <span className="text-xs font-normal text-slate-600 ml-1.5">
-                          — {highlightMatch(tool.name, query)}
-                        </span>
-                      </h4>
-                    </div>
+                    {(() => {
+                      const ToolIcon = tool.icon || getToolIcon(tool.id);
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded bg-white border border-slate-200/90 shadow-3xs flex items-center justify-center shrink-0">
+                            <ToolIcon className="w-3.5 h-3.5 text-indigo-600" />
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">
+                            {highlightMatch(tool.shortName, query)}
+                            <span className="text-xs font-normal text-slate-600 ml-1.5">
+                              — {highlightMatch(tool.name, query)}
+                            </span>
+                          </h4>
+                        </div>
+                      );
+                    })()}
 
                     <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
                       {highlightMatch(tool.tagline || tool.corePurpose, query)}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { TOOLS_DATA, ToolDefinition } from './data/toolsData.ts';
 import { INNOVATION_TOOLS_DATA } from './data/innovationToolsData.ts';
 import { MARKETING_TOOLS_DATA } from './data/marketingToolsData.ts';
@@ -96,8 +96,12 @@ import { ToolDetailView } from './components/ToolDetailView.tsx';
 import { GlossaryView } from './components/GlossaryView.tsx';
 import { GlobalSearchModal } from './components/GlobalSearchModal.tsx';
 import { UserProgressIndicator } from './components/UserProgressIndicator.tsx';
+import { ProgressRing } from './components/ProgressRing.tsx';
 import { SimulatorReportModal } from './components/SimulatorReportModal.tsx';
-import { useUserProgress, setSimulatorComplete } from './utils/userProgress.ts';
+import { UserSessionPerformancePanel } from './components/UserSessionPerformancePanel.tsx';
+import { QuickJumpDropdown } from './components/QuickJumpDropdown.tsx';
+import { TOOL_ICONS, getToolIcon } from './data/toolIcons.ts';
+import { useUserProgress, setSimulatorComplete, addSimulatorTimeSpent } from './utils/userProgress.ts';
 import {
   Home,
   Download,
@@ -125,10 +129,12 @@ import {
   Rocket,
   BarChart3,
   Search,
-  Trophy
+  Trophy,
+  BrainCircuit,
+  Compass
 } from 'lucide-react';
 
-const ALL_TOOLS: ToolDefinition[] = [
+const RAW_TOOLS: ToolDefinition[] = [
   ...TOOLS_DATA,
   ...INNOVATION_TOOLS_DATA,
   ...MARKETING_TOOLS_DATA,
@@ -141,8 +147,13 @@ const ALL_TOOLS: ToolDefinition[] = [
   ...ANALYTICS_TOOLS_DATA
 ];
 
+const ALL_TOOLS: ToolDefinition[] = RAW_TOOLS.map(tool => ({
+  ...tool,
+  icon: TOOL_ICONS[tool.id] || Compass
+}));
+
 export default function App() {
-  const [activeMainTab, setActiveMainTab] = useState<'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary'>('home');
+  const [activeMainTab, setActiveMainTab] = useState<'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance'>('home');
   const [selectedToolId, setSelectedToolId] = useState<string>('swot');
   const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('Analytics');
   const [showCurriculumOverview, setShowCurriculumOverview] = useState<boolean>(false);
@@ -151,6 +162,30 @@ export default function App() {
 
   // Persistent user learning progress hook
   const { progress, toggleSimulator, isSimulatorDone, isQuizDone } = useUserProgress();
+
+  // Dynamic pillar completion statistics for visual progress rings
+  const pillarStats = useMemo(() => {
+    const calc = (tools: ToolDefinition[]) => {
+      const total = tools.length;
+      const completed = tools.filter(t => progress.completedSimulators.includes(t.id)).length;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      return { completed, total, percentage };
+    };
+
+    return {
+      All: calc(ALL_TOOLS),
+      Strategy: calc(TOOLS_DATA),
+      Innovation: calc(INNOVATION_TOOLS_DATA),
+      Marketing: calc(MARKETING_TOOLS_DATA),
+      Operations: calc(OPERATIONS_TOOLS_DATA),
+      Financial: calc(FINANCIAL_TOOLS_DATA),
+      Project: calc(PROJECT_TOOLS_DATA),
+      HR: calc(HR_TOOLS_DATA),
+      Risk: calc(RISK_TOOLS_DATA),
+      Product: calc(PRODUCT_TOOLS_DATA),
+      Analytics: calc(ANALYTICS_TOOLS_DATA),
+    };
+  }, [progress.completedSimulators]);
 
   // Global hotkey to trigger search (Cmd+K / Ctrl+K or /)
   useEffect(() => {
@@ -174,6 +209,16 @@ export default function App() {
         setSimulatorComplete(selectedToolId, true);
       }, 800);
       return () => clearTimeout(timer);
+    }
+  }, [activeMainTab, selectedToolId]);
+
+  // Track active dwell time in the current simulator (increments every 5 seconds)
+  useEffect(() => {
+    if (activeMainTab === 'simulators' && selectedToolId) {
+      const interval = setInterval(() => {
+        addSimulatorTimeSpent(selectedToolId, 5);
+      }, 5000);
+      return () => clearInterval(interval);
     }
   }, [activeMainTab, selectedToolId]);
 
@@ -363,8 +408,13 @@ export default function App() {
               className="flex items-center gap-2.5 sm:gap-3 shrink-0 cursor-pointer group"
               title="Return to BizTools Home"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-slate-900 to-indigo-950 flex items-center justify-center text-white font-black text-xs sm:text-sm tracking-tight shadow-xs border border-slate-800 shrink-0 group-hover:scale-105 transition-transform">
-                BT
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-xs shrink-0 group-hover:scale-105 group-hover:border-indigo-400 group-hover:shadow-sm transition-all flex items-center justify-center">
+                <img
+                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                  alt="BizTools by Sundaresh Kamaraj"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
@@ -475,6 +525,18 @@ export default function App() {
                 <span>Glossary</span>
                 <span className="text-3xs font-mono font-bold text-slate-400">350+</span>
               </button>
+              <button
+                onClick={() => setActiveMainTab('performance')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === 'performance'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+                title="User Session Performance & Complexity Analysis"
+              >
+                <BrainCircuit className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Performance</span>
+              </button>
             </nav>
 
             {/* Right: Quick Search & Progress Hub */}
@@ -502,6 +564,7 @@ export default function App() {
                   handleSelectTool(toolId);
                   setActiveMainTab(view);
                 }}
+                onOpenPerformance={() => setActiveMainTab('performance')}
               />
             </div>
           </div>
@@ -572,6 +635,15 @@ export default function App() {
             <FileText className="w-3.5 h-3.5 text-slate-500" />
             <span>Glossary</span>
           </button>
+          <button
+            onClick={() => setActiveMainTab('performance')}
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeMainTab === 'performance' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+            }`}
+          >
+            <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Performance</span>
+          </button>
         </div>
       </header>
 
@@ -604,87 +676,14 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Quick Jump Dropdown */}
-                <div className="relative min-w-0 flex-1 sm:flex-initial">
-                  <select
-                    id="framework-select"
-                    value={selectedToolId}
-                    onChange={(e) => handleSelectTool(e.target.value)}
-                    className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs font-semibold rounded-lg pl-3 pr-8 py-1.5 focus:ring-2 focus:ring-slate-900 outline-none cursor-pointer transition-colors w-full max-w-[200px] sm:max-w-[260px] truncate"
-                  >
-                    <optgroup label="1. Strategy & Planning">
-                      {TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="2. Business Model Innovation">
-                      {INNOVATION_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="3. Marketing & Growth">
-                      {MARKETING_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="4. Operations & Process">
-                      {OPERATIONS_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="5. Financial & Performance">
-                      {FINANCIAL_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="6. Project Management">
-                      {PROJECT_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="7. HR & Organizational">
-                      {HR_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="8. Risk & Decision-Making">
-                      {RISK_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="9. Product & Startup">
-                      {PRODUCT_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="10. Data & Analytics">
-                      {ANALYTICS_TOOLS_DATA.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.shortName} — {t.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                {/* Quick Jump Dropdown with Framework Lucide Icons */}
+                <QuickJumpDropdown
+                  tools={ALL_TOOLS}
+                  selectedToolId={selectedToolId}
+                  onSelectTool={handleSelectTool}
+                  isSimulatorDone={isSimulatorDone}
+                  isQuizDone={isQuizDone}
+                />
               </div>
 
               {/* Right: Direct Simulation / Guide Mode switcher & Completed Toggle */}
@@ -757,148 +756,396 @@ export default function App() {
               </span>
               <button
                 onClick={() => handleSetCategory('All')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'All'
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
+                title={`All Tools (${pillarStats.All.completed}/${pillarStats.All.total} completed - ${pillarStats.All.percentage}%)`}
               >
-                All 57
+                <ProgressRing
+                  percentage={pillarStats.All.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'All'}
+                  progressColor={
+                    pillarStats.All.percentage === 100
+                      ? (categoryFilter === 'All' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'All' ? '#ffffff' : '#0f172a')
+                  }
+                />
+                <span>All 57</span>
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.All.percentage === 100
+                      ? (categoryFilter === 'All' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'All' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200/80 text-slate-700')
+                  }`}
+                >
+                  {pillarStats.All.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.All.completed}/{pillarStats.All.total})
+                  </span>
+                </span>
               </button>
+
+              {/* 1. Strategy */}
               <button
                 onClick={() => handleSetCategory('Strategy')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Strategy'
                     ? 'bg-blue-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-blue-900 hover:bg-blue-50'
                 }`}
+                title={`Strategy (${pillarStats.Strategy.completed}/${pillarStats.Strategy.total} completed - ${pillarStats.Strategy.percentage}%)`}
               >
-                1. Strategy <span className="opacity-70 text-2xs ml-0.5">(8)</span>
+                <ProgressRing
+                  percentage={pillarStats.Strategy.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Strategy'}
+                  progressColor={
+                    pillarStats.Strategy.percentage === 100
+                      ? (categoryFilter === 'Strategy' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Strategy' ? '#ffffff' : '#2563eb')
+                  }
+                />
+                <span>1. Strategy</span>
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Strategy.percentage === 100
+                      ? (categoryFilter === 'Strategy' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Strategy' ? 'bg-blue-950 text-blue-200' : 'bg-blue-100/80 text-blue-800')
+                  }`}
+                >
+                  {pillarStats.Strategy.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Strategy.completed}/{pillarStats.Strategy.total})
+                  </span>
+                </span>
               </button>
+
+              {/* 2. Innovation */}
               <button
                 onClick={() => handleSetCategory('Innovation')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Innovation'
                     ? 'bg-emerald-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-emerald-900 hover:bg-emerald-50'
                 }`}
+                title={`Innovation (${pillarStats.Innovation.completed}/${pillarStats.Innovation.total} completed - ${pillarStats.Innovation.percentage}%)`}
               >
-                2. Innovation <span className="opacity-70 text-2xs ml-0.5">(6)</span>
+                <ProgressRing
+                  percentage={pillarStats.Innovation.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Innovation'}
+                  progressColor={
+                    pillarStats.Innovation.percentage === 100
+                      ? (categoryFilter === 'Innovation' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Innovation' ? '#ffffff' : '#059669')
+                  }
+                />
+                <span>2. Innovation</span>
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Innovation.percentage === 100
+                      ? (categoryFilter === 'Innovation' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Innovation' ? 'bg-emerald-950 text-emerald-200' : 'bg-emerald-100/80 text-emerald-800')
+                  }`}
+                >
+                  {pillarStats.Innovation.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Innovation.completed}/{pillarStats.Innovation.total})
+                  </span>
+                </span>
               </button>
+
+              {/* 3. Marketing */}
               <button
                 onClick={() => handleSetCategory('Marketing')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Marketing'
                     ? 'bg-amber-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-amber-900 hover:bg-amber-50'
                 }`}
+                title={`Marketing (${pillarStats.Marketing.completed}/${pillarStats.Marketing.total} completed - ${pillarStats.Marketing.percentage}%)`}
               >
-                3. Marketing <span className="opacity-70 text-2xs ml-0.5">(6)</span>
+                <ProgressRing
+                  percentage={pillarStats.Marketing.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Marketing'}
+                  progressColor={
+                    pillarStats.Marketing.percentage === 100
+                      ? (categoryFilter === 'Marketing' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Marketing' ? '#ffffff' : '#d97706')
+                  }
+                />
+                <span>3. Marketing</span>
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Marketing.percentage === 100
+                      ? (categoryFilter === 'Marketing' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Marketing' ? 'bg-amber-950 text-amber-200' : 'bg-amber-100/80 text-amber-800')
+                  }`}
+                >
+                  {pillarStats.Marketing.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Marketing.completed}/{pillarStats.Marketing.total})
+                  </span>
+                </span>
               </button>
+
+              {/* 4. Operations */}
               <button
                 onClick={() => handleSetCategory('Operations')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Operations'
                     ? 'bg-teal-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-teal-900 hover:bg-teal-50'
                 }`}
+                title={`Operations (${pillarStats.Operations.completed}/${pillarStats.Operations.total} completed - ${pillarStats.Operations.percentage}%)`}
               >
-                4. Operations <span className="opacity-70 text-2xs ml-0.5">(6)</span>
+                <ProgressRing
+                  percentage={pillarStats.Operations.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Operations'}
+                  progressColor={
+                    pillarStats.Operations.percentage === 100
+                      ? (categoryFilter === 'Operations' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Operations' ? '#ffffff' : '#0d9488')
+                  }
+                />
+                <span>4. Operations</span>
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Operations.percentage === 100
+                      ? (categoryFilter === 'Operations' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Operations' ? 'bg-teal-950 text-teal-200' : 'bg-teal-100/80 text-teal-800')
+                  }`}
+                >
+                  {pillarStats.Operations.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Operations.completed}/{pillarStats.Operations.total})
+                  </span>
+                </span>
               </button>
+
+              {/* 5. Financial */}
               <button
                 onClick={() => handleSetCategory('Financial')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Financial'
                     ? 'bg-emerald-800 text-white shadow-xs'
                     : 'text-slate-600 hover:text-emerald-900 hover:bg-emerald-50'
                 }`}
+                title={`Financial (${pillarStats.Financial.completed}/${pillarStats.Financial.total} completed - ${pillarStats.Financial.percentage}%)`}
               >
-                <Coins className="w-3 h-3 text-emerald-400" />
+                <ProgressRing
+                  percentage={pillarStats.Financial.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Financial'}
+                  progressColor={
+                    pillarStats.Financial.percentage === 100
+                      ? (categoryFilter === 'Financial' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Financial' ? '#ffffff' : '#10b981')
+                  }
+                />
                 <span>5. Financial</span>
-                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                  categoryFilter === 'Financial' ? 'bg-emerald-900 text-emerald-200' : 'bg-emerald-100 text-emerald-800'
-                }`}>
-                  6
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Financial.percentage === 100
+                      ? (categoryFilter === 'Financial' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Financial' ? 'bg-emerald-950 text-emerald-200' : 'bg-emerald-100/80 text-emerald-800')
+                  }`}
+                >
+                  {pillarStats.Financial.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Financial.completed}/{pillarStats.Financial.total})
+                  </span>
                 </span>
               </button>
+
+              {/* 6. Project */}
               <button
                 onClick={() => handleSetCategory('Project')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Project'
                     ? 'bg-indigo-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-indigo-900 hover:bg-indigo-50'
                 }`}
+                title={`Project (${pillarStats.Project.completed}/${pillarStats.Project.total} completed - ${pillarStats.Project.percentage}%)`}
               >
-                <KanbanSquare className="w-3 h-3 text-indigo-400" />
+                <ProgressRing
+                  percentage={pillarStats.Project.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Project'}
+                  progressColor={
+                    pillarStats.Project.percentage === 100
+                      ? (categoryFilter === 'Project' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Project' ? '#ffffff' : '#6366f1')
+                  }
+                />
                 <span>6. Project</span>
-                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                  categoryFilter === 'Project' ? 'bg-indigo-950 text-indigo-200' : 'bg-indigo-100 text-indigo-800'
-                }`}>
-                  5
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Project.percentage === 100
+                      ? (categoryFilter === 'Project' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Project' ? 'bg-indigo-950 text-indigo-200' : 'bg-indigo-100/80 text-indigo-800')
+                  }`}
+                >
+                  {pillarStats.Project.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Project.completed}/{pillarStats.Project.total})
+                  </span>
                 </span>
               </button>
+
+              {/* 7. HR */}
               <button
                 onClick={() => handleSetCategory('HR')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'HR'
                     ? 'bg-purple-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-purple-900 hover:bg-purple-50'
                 }`}
+                title={`HR & Org (${pillarStats.HR.completed}/${pillarStats.HR.total} completed - ${pillarStats.HR.percentage}%)`}
               >
-                <Users className="w-3 h-3 text-purple-400" />
+                <ProgressRing
+                  percentage={pillarStats.HR.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'HR'}
+                  progressColor={
+                    pillarStats.HR.percentage === 100
+                      ? (categoryFilter === 'HR' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'HR' ? '#ffffff' : '#9333ea')
+                  }
+                />
                 <span>7. HR & Org</span>
-                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                  categoryFilter === 'HR' ? 'bg-purple-950 text-purple-200' : 'bg-purple-100 text-purple-800'
-                }`}>
-                  5
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.HR.percentage === 100
+                      ? (categoryFilter === 'HR' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'HR' ? 'bg-purple-950 text-purple-200' : 'bg-purple-100/80 text-purple-800')
+                  }`}
+                >
+                  {pillarStats.HR.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.HR.completed}/{pillarStats.HR.total})
+                  </span>
                 </span>
               </button>
+
+              {/* 8. Risk */}
               <button
                 onClick={() => handleSetCategory('Risk')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Risk'
                     ? 'bg-rose-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-rose-900 hover:bg-rose-50'
                 }`}
+                title={`Risk & Decision (${pillarStats.Risk.completed}/${pillarStats.Risk.total} completed - ${pillarStats.Risk.percentage}%)`}
               >
-                <AlertOctagon className="w-3 h-3 text-rose-400" />
+                <ProgressRing
+                  percentage={pillarStats.Risk.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Risk'}
+                  progressColor={
+                    pillarStats.Risk.percentage === 100
+                      ? (categoryFilter === 'Risk' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Risk' ? '#ffffff' : '#e11d48')
+                  }
+                />
                 <span>8. Risk & Decision</span>
-                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                  categoryFilter === 'Risk' ? 'bg-rose-950 text-rose-200' : 'bg-rose-100 text-rose-800'
-                }`}>
-                  5
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Risk.percentage === 100
+                      ? (categoryFilter === 'Risk' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Risk' ? 'bg-rose-950 text-rose-200' : 'bg-rose-100/80 text-rose-800')
+                  }`}
+                >
+                  {pillarStats.Risk.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Risk.completed}/{pillarStats.Risk.total})
+                  </span>
                 </span>
               </button>
+
+              {/* 9. Product */}
               <button
                 onClick={() => handleSetCategory('Product')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Product'
                     ? 'bg-cyan-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-cyan-900 hover:bg-cyan-50'
                 }`}
+                title={`Product & Startup (${pillarStats.Product.completed}/${pillarStats.Product.total} completed - ${pillarStats.Product.percentage}%)`}
               >
-                <Rocket className="w-3 h-3 text-cyan-400" />
+                <ProgressRing
+                  percentage={pillarStats.Product.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Product'}
+                  progressColor={
+                    pillarStats.Product.percentage === 100
+                      ? (categoryFilter === 'Product' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Product' ? '#ffffff' : '#0891b2')
+                  }
+                />
                 <span>9. Product & Startup</span>
-                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                  categoryFilter === 'Product' ? 'bg-cyan-950 text-cyan-200' : 'bg-cyan-100 text-cyan-800'
-                }`}>
-                  5
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Product.percentage === 100
+                      ? (categoryFilter === 'Product' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Product' ? 'bg-cyan-950 text-cyan-200' : 'bg-cyan-100/80 text-cyan-800')
+                  }`}
+                >
+                  {pillarStats.Product.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Product.completed}/{pillarStats.Product.total})
+                  </span>
                 </span>
               </button>
+
+              {/* 10. Analytics */}
               <button
                 onClick={() => handleSetCategory('Analytics')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                   categoryFilter === 'Analytics'
                     ? 'bg-violet-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-violet-900 hover:bg-violet-50'
                 }`}
+                title={`Data & Analytics (${pillarStats.Analytics.completed}/${pillarStats.Analytics.total} completed - ${pillarStats.Analytics.percentage}%)`}
               >
-                <BarChart3 className="w-3 h-3 text-violet-400" />
+                <ProgressRing
+                  percentage={pillarStats.Analytics.percentage}
+                  size={18}
+                  strokeWidth={2.4}
+                  isActive={categoryFilter === 'Analytics'}
+                  progressColor={
+                    pillarStats.Analytics.percentage === 100
+                      ? (categoryFilter === 'Analytics' ? '#34d399' : '#10b981')
+                      : (categoryFilter === 'Analytics' ? '#ffffff' : '#7c3aed')
+                  }
+                />
                 <span>10. Data & Analytics</span>
-                <span className={`px-1.5 py-0.2 rounded text-3xs font-extrabold uppercase ${
-                  categoryFilter === 'Analytics' ? 'bg-violet-950 text-violet-200' : 'bg-violet-100 text-violet-800'
-                }`}>
-                  5
+                <span
+                  className={`text-3xs font-mono font-bold px-1.5 py-0.5 rounded transition-colors ${
+                    pillarStats.Analytics.percentage === 100
+                      ? (categoryFilter === 'Analytics' ? 'bg-emerald-500 text-white font-black shadow-2xs' : 'bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300')
+                      : (categoryFilter === 'Analytics' ? 'bg-violet-950 text-violet-200' : 'bg-violet-100/80 text-violet-800')
+                  }`}
+                >
+                  {pillarStats.Analytics.percentage}%
+                  <span className="opacity-75 font-normal ml-0.5 hidden xl:inline">
+                    ({pillarStats.Analytics.completed}/{pillarStats.Analytics.total})
+                  </span>
                 </span>
               </button>
             </div>
@@ -910,28 +1157,33 @@ export default function App() {
                 const globalIdx = ALL_TOOLS.findIndex(t => t.id === tool.id) + 1;
                 const isSimDone = isSimulatorDone(tool.id);
                 const isQzDone = isQuizDone(tool.id);
+                const ToolIcon = tool.icon || getToolIcon(tool.id);
 
                 return (
                   <button
                     key={tool.id}
                     onClick={() => handleSelectTool(tool.id)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                       isSelected
                         ? 'bg-slate-900 text-white shadow-xs font-bold ring-1 ring-slate-900'
-                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 shadow-2xs'
                     }`}
+                    title={`${tool.shortName} — ${tool.name} (${tool.category})`}
                   >
-                    <span className={`text-3xs font-mono px-1 py-0.2 rounded ${
-                      isSelected ? 'bg-slate-700 text-slate-200' : 'bg-slate-200 text-slate-600'
+                    <span className={`text-3xs font-mono px-1.5 py-0.2 rounded ${
+                      isSelected ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-500'
                     }`}>
                       #{globalIdx}
                     </span>
+                    <ToolIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-indigo-300' : 'text-slate-500'}`} />
                     <span>{tool.shortName}</span>
                     {isSimDone && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Simulator completed" />
+                      <span title="Simulator completed">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      </span>
                     )}
                     {isQzDone && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" title="Quiz completed" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" title="Quiz passed" />
                     )}
                   </button>
                 );
@@ -973,8 +1225,16 @@ export default function App() {
                       Case: <span className="text-slate-700 font-semibold">{currentTool.caseStudy.company}</span>
                     </span>
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                    {currentTool.name}
+                  <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    {(() => {
+                      const ActiveToolIcon = currentTool.icon || getToolIcon(currentTool.id);
+                      return (
+                        <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200/60 flex items-center justify-center shrink-0">
+                          <ActiveToolIcon className="w-4 h-4 text-indigo-600 shrink-0" />
+                        </div>
+                      );
+                    })()}
+                    <span>{currentTool.name}</span>
                   </h2>
                   <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">
                     {currentTool.tagline} · {currentTool.corePurpose}
@@ -1377,6 +1637,17 @@ export default function App() {
 
         {/* VIEW 6: GLOSSARY */}
         {activeMainTab === 'glossary' && <GlossaryView />}
+
+        {/* VIEW 7: USER SESSION PERFORMANCE & COMPLEXITY ANALYTICS (Recharts) */}
+        {activeMainTab === 'performance' && (
+          <UserSessionPerformancePanel
+            allTools={ALL_TOOLS}
+            onSelectTool={(id, view) => {
+              handleSelectTool(id);
+              setActiveMainTab(view);
+            }}
+          />
+        )}
       </main>
 
       {/* Footer */}

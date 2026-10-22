@@ -1,3 +1,5 @@
+import { LucideIcon } from 'lucide-react';
+
 export interface QuizQuestion {
   id: string;
   question: string;
@@ -23,6 +25,7 @@ export interface ToolDefinition {
   name: string;
   shortName: string;
   category: string;
+  icon?: LucideIcon;
   tagline: string;
   origin: string;
   corePurpose: string;

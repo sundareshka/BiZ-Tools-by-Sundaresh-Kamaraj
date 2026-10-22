@@ -13,7 +13,8 @@ import {
   Layers,
   ArrowRight,
   CheckSquare,
-  Square
+  Square,
+  BrainCircuit
 } from 'lucide-react';
 import { useUserProgress } from '../utils/userProgress.ts';
 import { ToolDefinition } from '../data/toolsData.ts';
@@ -22,12 +23,14 @@ interface UserProgressIndicatorProps {
   allTools: ToolDefinition[];
   currentToolId?: string;
   onSelectTool: (toolId: string, view: 'simulators' | 'quizzes') => void;
+  onOpenPerformance?: () => void;
 }
 
 export function UserProgressIndicator({
   allTools,
   currentToolId,
-  onSelectTool
+  onSelectTool,
+  onOpenPerformance
 }: UserProgressIndicatorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -249,6 +252,24 @@ export function UserProgressIndicator({
                   </div>
                 </div>
               </div>
+
+              {/* Jump to Performance Analytics */}
+              {onOpenPerformance && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    onOpenPerformance();
+                  }}
+                  className="w-full mt-3 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all flex items-center justify-between shadow-xs group cursor-pointer"
+                  title="View complexity vs time charts and topic engagement breakdown"
+                >
+                  <div className="flex items-center gap-2">
+                    <BrainCircuit className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
+                    <span>View Session Performance & Complexity</span>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
             </div>
 
             {/* Current Active Tool Quick Check-off */}

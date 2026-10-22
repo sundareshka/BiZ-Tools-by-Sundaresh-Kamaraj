@@ -31,7 +31,7 @@ import { DailyBusinessInsight } from './DailyBusinessInsight.tsx';
 interface HomePageProps {
   allTools: ToolDefinition[];
   onSelectTool: (toolId: string, view: 'simulators' | 'tools' | 'quizzes') => void;
-  onNavigateTab: (tab: 'simulators' | 'tools' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary') => void;
+  onNavigateTab: (tab: 'simulators' | 'tools' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance') => void;
 }
 
 export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProps) {
@@ -180,7 +180,15 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           {/* Left Column: Executive Proposition */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+            <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400">
+              <div className="w-7 h-7 rounded-lg overflow-hidden bg-white border border-slate-700 shadow-2xs shrink-0 flex items-center justify-center">
+                <img
+                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                  alt="BizTools by Sundaresh Kamaraj"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
               <span className="font-bold tracking-wider uppercase text-slate-300 font-mono">BizTools</span>
               <span aria-hidden="true">·</span>
               <span>by Sundaresh Kamaraj</span>
@@ -221,6 +229,15 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
               >
                 <GitCompare className="w-3.5 h-3.5" />
                 <span>Master Matrix</span>
+              </button>
+
+              <button
+                onClick={() => onNavigateTab('performance')}
+                className="px-4 py-3.5 text-xs text-indigo-400 hover:text-indigo-300 font-semibold transition-colors flex items-center justify-center gap-1.5"
+                title="View session performance & complexity analytics"
+              >
+                <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Performance</span>
               </button>
             </div>
 
@@ -734,8 +751,13 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
               "Strategic thinking is not an abstract art form; it is a discipline of structured trade-offs, financial mathematics, and behavioral mechanics. BizTools was engineered to provide management consultants, directors, and founders with a zero-friction playground to stress-test frameworks before entering the boardroom."
             </p>
             <div className="flex items-center gap-3 pt-2">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-indigo-500 to-indigo-800 flex items-center justify-center text-white font-black text-sm">
-                SK
+              <div className="w-11 h-11 rounded-xl overflow-hidden bg-white border border-slate-700 shadow-sm shrink-0 flex items-center justify-center">
+                <img
+                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                  alt="Sundaresh Kamaraj"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div>
                 <div className="text-sm font-bold text-white">Sundaresh Kamaraj</div>
