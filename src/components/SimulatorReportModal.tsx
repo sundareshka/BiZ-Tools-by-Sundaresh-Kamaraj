@@ -232,46 +232,46 @@ ${
             </div>
 
             {/* Simulated Paper Sheet */}
-            <div className="flex-1 bg-white p-5 rounded-lg border border-slate-200/80 shadow-2xs space-y-4 overflow-y-auto max-h-[380px] text-slate-800 text-xs print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0 print-page">
+            <div className="simulator-report-paper flex-1 bg-white p-5 rounded-lg border border-slate-200/80 shadow-2xs space-y-4 overflow-y-auto max-h-[380px] text-slate-800 text-xs print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0 print-page">
               {/* Paper Top Band */}
-              <div className="p-3 bg-slate-900 text-white rounded-lg space-y-1">
+              <div className="report-header-band p-3 bg-slate-900 text-white rounded-lg space-y-1">
                 <div className="text-2xs font-mono text-slate-400">BIZTOOLS EXECUTIVE STRATEGY BRIEF</div>
-                <div className="text-base font-bold">{tool.name}</div>
-                <div className="text-3xs text-slate-300">{tool.category} · {companyName}</div>
+                <div className="text-base font-bold report-title">{tool.name}</div>
+                <div className="text-3xs text-slate-300 report-subtitle">{tool.category} · {companyName}</div>
               </div>
 
               {/* Metadata Pill Box */}
-              <div className="grid grid-cols-2 gap-2 p-2.5 bg-slate-50 rounded-md border border-slate-200 text-2xs">
-                <div><span className="text-slate-400">Author:</span> <span className="font-semibold">{authorName}</span></div>
-                <div><span className="text-slate-400">Horizon:</span> <span className="font-semibold">{tool.horizon || '1-3 Years'}</span></div>
-                <div><span className="text-slate-400">Scope:</span> <span className="font-semibold">{tool.scope || 'Enterprise'}</span></div>
+              <div className="report-meta-grid grid grid-cols-2 gap-2 p-2.5 bg-slate-50 rounded-md border border-slate-200 text-2xs">
+                <div><span className="text-slate-400">Author:</span> <span className="font-semibold text-slate-800">{authorName}</span></div>
+                <div><span className="text-slate-400">Horizon:</span> <span className="font-semibold text-slate-800">{tool.horizon || '1-3 Years'}</span></div>
+                <div><span className="text-slate-400">Scope:</span> <span className="font-semibold text-slate-800">{tool.scope || 'Enterprise'}</span></div>
                 <div><span className="text-slate-400">Status:</span> <span className="font-bold text-emerald-600">Verified Final</span></div>
               </div>
 
               {/* Executive Summary */}
-              <div>
-                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  1. Executive Context
+              <div className="report-section">
+                <div className="report-section-title text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  1. Executive Context & Verdict
                 </div>
-                <p className="text-slate-600 text-2xs leading-relaxed">
+                <p className="text-slate-600 text-2xs leading-relaxed report-body-text">
                   {tool.corePurpose}
                 </p>
                 {executiveNotes && (
-                  <div className="mt-2 p-2 bg-indigo-50/70 border border-indigo-100 rounded text-2xs text-indigo-950 font-medium italic">
+                  <div className="report-executive-notes mt-2 p-2 bg-indigo-50/70 border border-indigo-100 rounded text-2xs text-indigo-950 font-medium italic">
                     "{executiveNotes}"
                   </div>
                 )}
               </div>
 
               {/* Tool Session Specific Highlights */}
-              <div>
-                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+              <div className="report-section">
+                <div className="report-section-title text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                   2. Session Synthesis & Data Extract
                 </div>
 
                 {tool.id === 'swot' ? (
-                  <div className="space-y-1.5">
-                    <div className="grid grid-cols-2 gap-1.5 text-3xs">
+                  <div className="space-y-1.5 report-synthesis-block">
+                    <div className="grid grid-cols-2 gap-1.5 text-3xs report-quad-grid">
                       <div className="p-1.5 bg-emerald-50 rounded border border-emerald-200">
                         <span className="font-bold text-emerald-900 block">Strengths (S)</span>
                         <span className="text-emerald-800">20-yr dealer network; Agronomist team</span>
@@ -291,7 +291,7 @@ ${
                     </div>
                   </div>
                 ) : tool.id === 'pestle' ? (
-                  <div className="space-y-1 text-3xs">
+                  <div className="space-y-1 text-3xs report-synthesis-block">
                     {PESTLE_DEFAULT_SESSION.drivers.slice(0, 3).map((d, idx) => (
                       <div key={idx} className="p-1.5 bg-slate-50 rounded border border-slate-200 flex justify-between">
                         <span className="font-semibold text-slate-800">{d.category}: {d.driver}</span>
@@ -300,7 +300,7 @@ ${
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-1 text-3xs">
+                  <div className="space-y-1 text-3xs report-synthesis-block">
                     {tool.coreConcepts?.slice(0, 2).map((c, idx) => (
                       <div key={idx} className="p-1.5 bg-slate-50 rounded border border-slate-200">
                         <span className="font-semibold text-slate-900">{c.term}:</span>{' '}
@@ -313,10 +313,16 @@ ${
 
               {/* Case Study Extract */}
               {includeCaseStudy && tool.caseStudy && (
-                <div className="pt-1 border-t border-slate-100 text-3xs text-slate-500">
-                  <span className="font-semibold text-slate-800">Empirical Benchmark:</span> {tool.caseStudy.company} · Challenge: {tool.caseStudy.challenge}
+                <div className="report-case-study pt-1.5 border-t border-slate-100 text-3xs text-slate-600">
+                  <span className="font-bold text-slate-800">Empirical Benchmark:</span> {tool.caseStudy.company} — <span className="italic">{tool.caseStudy.challenge}</span>
                 </div>
               )}
+
+              {/* Confidential Audit Sign-Off Footer */}
+              <div className="report-footer pt-2 mt-2 border-t border-slate-200 flex items-center justify-between text-3xs text-slate-400 font-mono">
+                <span>CONFIDENTIAL · PREPARED FOR EXECUTIVE REVIEW</span>
+                <span>BIZTOOLS · SUNDARESH KAMARAJ</span>
+              </div>
             </div>
           </div>
         </div>

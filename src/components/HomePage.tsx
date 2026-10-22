@@ -26,6 +26,7 @@ import {
   Award
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
+import { DailyBusinessInsight } from './DailyBusinessInsight.tsx';
 
 interface HomePageProps {
   allTools: ToolDefinition[];
@@ -338,6 +339,11 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
           </div>
         </div>
       </section>
+
+      {/* 1.5 DAILY BUSINESS STRATEGY INSIGHT (Powered by Gemini AI) */}
+      <DailyBusinessInsight
+        onSelectTool={(toolId, view) => onSelectTool(toolId, view)}
+      />
 
       {/* 2. THE 10 EXECUTIVE DISCIPLINES: Interactive Leadership Explorer */}
       <section className="space-y-6">

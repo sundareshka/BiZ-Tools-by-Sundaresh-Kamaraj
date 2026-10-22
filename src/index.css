@@ -21,8 +21,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+@page {
+  size: A4 portrait;
+  margin: 12mm 15mm 15mm 15mm;
+}
+
 @media print {
-  /* Hide non-printable app navigation and control chrome */
+  /* Hide non-printable app navigation, header, footer, buttons, and control chrome */
   header,
   footer,
   nav,
@@ -31,22 +36,207 @@
     display: none !important;
   }
 
+  html,
   body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background-color: #ffffff !important;
     color: #0f172a !important;
-    font-size: 11pt !important;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
   }
 
-  /* Force background colors and borders to render in browser PDF print */
+  /* Force background colors and borders to render in browser PDF print without shadows */
   *,
   *::before,
   *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 
-  .print-page {
-    page-break-after: avoid;
-    break-inside: avoid;
+  /* 1. Modal Backdrop & Container Normalization: Strip outer modal overlays */
+  .fixed.inset-0 {
+    position: static !important;
+    inset: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .fixed.inset-0 > div,
+  .simulator-report-modal {
+    position: static !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* 2. Simulator Report Paper: Fit perfectly onto A4 page with zero excess borders */
+  .simulator-report-paper {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 3. Top Executive Header Band */
+  .report-header-band {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    padding: 10pt 12pt !important;
+    border-radius: 4pt !important;
+    margin-bottom: 8pt !important;
+    break-inside: avoid !important;
+  }
+
+  .report-header-band .report-title {
+    font-size: 16pt !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    color: #ffffff !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .report-header-band .report-subtitle {
+    font-size: 8.5pt !important;
+    color: #cbd5e1 !important;
+    margin-top: 2pt !important;
+  }
+
+  /* 4. Metadata Strip: Converted to a clean 4-column hairline strip */
+  .report-meta-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6pt !important;
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4pt !important;
+    padding: 6pt 10pt !important;
+    font-size: 8.5pt !important;
+    margin-bottom: 8pt !important;
+    break-inside: avoid !important;
+  }
+
+  .report-meta-grid > div {
+    font-size: 8.5pt !important;
+  }
+
+  /* 5. Report Sections & Headings */
+  .report-section {
+    margin-bottom: 8pt !important;
+    break-inside: avoid !important;
+  }
+
+  .report-section-title {
+    font-size: 9pt !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    color: #334155 !important;
+    margin-bottom: 3pt !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 2pt !important;
+  }
+
+  .report-body-text {
+    font-size: 9.5pt !important;
+    line-height: 1.45 !important;
+    color: #334155 !important;
+  }
+
+  /* 6. Strategic Verdict / Executive Notes Callout */
+  .report-executive-notes {
+    background-color: #eef2ff !important;
+    border-left: 3pt solid #6366f1 !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-radius: 0 4pt 4pt 0 !important;
+    padding: 6pt 10pt !important;
+    font-size: 9pt !important;
+    line-height: 1.4 !important;
+    color: #1e1b4b !important;
+    font-style: italic !important;
+    margin-top: 4pt !important;
+    break-inside: avoid !important;
+  }
+
+  /* 7. Structured Data Matrix (SWOT 4-Quadrant & PESTLE) */
+  .report-quad-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6pt !important;
+    margin-top: 4pt !important;
+    break-inside: avoid !important;
+  }
+
+  .report-quad-grid > div {
+    padding: 6pt 8pt !important;
+    border-radius: 4pt !important;
+    font-size: 8.5pt !important;
+    border-width: 1px !important;
+    break-inside: avoid !important;
+  }
+
+  .report-synthesis-block > div {
+    padding: 4.5pt 8pt !important;
+    font-size: 8.5pt !important;
+    border-radius: 4pt !important;
+    margin-bottom: 3pt !important;
+    border-width: 1px !important;
+    break-inside: avoid !important;
+  }
+
+  /* 8. Benchmark Case Study */
+  .report-case-study {
+    padding-top: 6pt !important;
+    border-top: 1px solid #e2e8f0 !important;
+    font-size: 8.5pt !important;
+    color: #475569 !important;
+    break-inside: avoid !important;
+  }
+
+  /* 9. Confidential Audit Sign-Off Footer */
+  .report-footer {
+    margin-top: 8pt !important;
+    padding-top: 6pt !important;
+    border-top: 1px solid #cbd5e1 !important;
+    font-size: 7.5pt !important;
+    color: #64748b !important;
+    break-inside: avoid !important;
+  }
+
+  /* Page Break Hygiene */
+  .print-page,
+  .report-section,
+  .break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
+
