@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { ToolDefinition } from '../data/toolsData.ts';
-import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, Clock, Layers, ArrowRight, Play, Sparkles } from 'lucide-react';
+import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, Clock, Layers, ArrowRight, Play, Sparkles, Download } from 'lucide-react';
 import { useUserProgress } from '../utils/userProgress.ts';
 
 export function ToolDetailView({
   tool,
   onLaunchSimulator,
-  onLaunchQuiz
+  onLaunchQuiz,
+  onExportReport
 }: {
   tool: ToolDefinition;
   onLaunchSimulator: () => void;
   onLaunchQuiz: () => void;
+  onExportReport?: () => void;
 }) {
   const [activeSection, setActiveSection] = useState<'overview' | 'caseStudy' | 'implementation' | 'tips'>('overview');
   const { isSimulatorDone, toggleSimulator, isQuizDone } = useUserProgress();
@@ -63,6 +65,16 @@ export function ToolDetailView({
               <CheckCircle2 className={`w-3.5 h-3.5 ${isQuizDone(tool.id) ? 'text-indigo-600' : 'text-slate-400'}`} />
               <span>{isQuizDone(tool.id) ? 'Quiz Passed' : 'Take Quiz'}</span>
             </button>
+            {onExportReport && (
+              <button
+                onClick={onExportReport}
+                className="px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                title="Export session data as printable PDF report"
+              >
+                <Download className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Export PDF</span>
+              </button>
+            )}
           </div>
         </div>
 

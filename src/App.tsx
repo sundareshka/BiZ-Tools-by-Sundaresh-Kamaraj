@@ -88,6 +88,7 @@ import { PredictiveAnalyticsSimulator } from './components/simulators/Predictive
 import { BIToolSimulator } from './components/simulators/BIToolSimulator.tsx';
 
 // Interactive Modules
+import { HomePage } from './components/HomePage.tsx';
 import { ScenarioSimulator } from './components/ScenarioSimulator.tsx';
 import { TrainingQuizModule } from './components/TrainingQuizModule.tsx';
 import { MasterComparisonView } from './components/MasterComparisonView.tsx';
@@ -95,8 +96,11 @@ import { ToolDetailView } from './components/ToolDetailView.tsx';
 import { GlossaryView } from './components/GlossaryView.tsx';
 import { GlobalSearchModal } from './components/GlobalSearchModal.tsx';
 import { UserProgressIndicator } from './components/UserProgressIndicator.tsx';
+import { SimulatorReportModal } from './components/SimulatorReportModal.tsx';
 import { useUserProgress, setSimulatorComplete } from './utils/userProgress.ts';
 import {
+  Home,
+  Download,
   ExternalLink,
   ChevronRight,
   ChevronLeft,
@@ -138,11 +142,12 @@ const ALL_TOOLS: ToolDefinition[] = [
 ];
 
 export default function App() {
-  const [activeMainTab, setActiveMainTab] = useState<'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary'>('simulators');
-  const [selectedToolId, setSelectedToolId] = useState<string>('kpis');
+  const [activeMainTab, setActiveMainTab] = useState<'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary'>('home');
+  const [selectedToolId, setSelectedToolId] = useState<string>('swot');
   const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('Analytics');
   const [showCurriculumOverview, setShowCurriculumOverview] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [isExportReportOpen, setIsExportReportOpen] = useState<boolean>(false);
 
   // Persistent user learning progress hook
   const { progress, toggleSimulator, isSimulatorDone, isQuizDone } = useUserProgress();
@@ -353,20 +358,27 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-16 flex items-center justify-between gap-2 sm:gap-4">
             {/* Left: Brand Identity */}
-            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-slate-900 to-indigo-950 flex items-center justify-center text-white font-black text-xs sm:text-sm tracking-tight shadow-xs border border-slate-800 shrink-0">
+            <div
+              onClick={() => setActiveMainTab('home')}
+              className="flex items-center gap-2.5 sm:gap-3 shrink-0 cursor-pointer group"
+              title="Return to BizTools Home"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-slate-900 to-indigo-950 flex items-center justify-center text-white font-black text-xs sm:text-sm tracking-tight shadow-xs border border-slate-800 shrink-0 group-hover:scale-105 transition-transform">
                 BT
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <h1 className="font-extrabold text-slate-900 tracking-tight text-lg sm:text-xl leading-none font-display">
-                    BuzToolz
+                  <h1 className="font-extrabold text-slate-900 group-hover:text-indigo-950 tracking-tight text-lg sm:text-xl leading-none font-display transition-colors">
+                    BizTools
                   </h1>
                   <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 tracking-wide font-mono hidden md:inline-block">
                     57 Tools · 10 Pillars
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-2xs sm:text-xs text-slate-500 font-medium mt-0.5 sm:mt-1">
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1.5 text-2xs sm:text-xs text-slate-500 font-medium mt-0.5 sm:mt-1"
+                >
                   <span>by</span>
                   <a
                     href="https://sundaresh.blog"
@@ -384,8 +396,19 @@ export default function App() {
             {/* Center: Primary View Navigation Tabs (Clean segmented control for large screens) */}
             <nav className="hidden xl:flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 text-xs font-semibold gap-0.5">
               <button
+                onClick={() => setActiveMainTab('home')}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === 'home'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <Home className="w-3.5 h-3.5 text-slate-700" />
+                <span>Home</span>
+              </button>
+              <button
                 onClick={() => setActiveMainTab('simulators')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeMainTab === 'simulators'
                     ? 'bg-white text-slate-900 font-bold shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
@@ -487,8 +510,17 @@ export default function App() {
         {/* Secondary View Navigation (Clean horizontal strip for mobile/tablet screens < xl) */}
         <div className="xl:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs font-semibold">
           <button
+            onClick={() => setActiveMainTab('home')}
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeMainTab === 'home' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+            }`}
+          >
+            <Home className="w-3.5 h-3.5 text-slate-400" />
+            <span>Home</span>
+          </button>
+          <button
             onClick={() => setActiveMainTab('simulators')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
               activeMainTab === 'simulators' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
             }`}
           >
@@ -705,6 +737,16 @@ export default function App() {
                     {isSimulatorDone(selectedToolId) ? 'Completed' : 'Mark Done'}
                   </span>
                 </button>
+
+                {/* PDF Report Export Button */}
+                <button
+                  onClick={() => setIsExportReportOpen(true)}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs"
+                  title="Export completed simulator session data as a printable PDF report"
+                >
+                  <Download className="w-3.5 h-3.5 text-indigo-600" />
+                  <span className="hidden sm:inline">Export PDF</span>
+                </button>
               </div>
             </div>
 
@@ -901,6 +943,18 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* VIEW 0: EXECUTIVE HOME PAGE */}
+        {activeMainTab === 'home' && (
+          <HomePage
+            allTools={ALL_TOOLS}
+            onSelectTool={(toolId, view) => {
+              handleSelectTool(toolId);
+              setActiveMainTab(view);
+            }}
+            onNavigateTab={(tab) => setActiveMainTab(tab)}
+          />
+        )}
+
         {/* VIEW 1: INTERACTIVE SIMULATORS */}
         {activeMainTab === 'simulators' && (
           <div className="space-y-6">
@@ -963,6 +1017,16 @@ export default function App() {
                     <Layers className="w-3.5 h-3.5 text-slate-500" />
                     <span>{showCurriculumOverview ? 'Hide Blueprint' : 'Curriculum Blueprint'}</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCurriculumOverview ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Export PDF Report Button */}
+                  <button
+                    onClick={() => setIsExportReportOpen(true)}
+                    className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    title="Export completed simulator session data as a printable PDF report"
+                  >
+                    <Download className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Export PDF Report</span>
                   </button>
                 </div>
               </div>
@@ -1291,6 +1355,7 @@ export default function App() {
             tool={currentTool}
             onLaunchSimulator={() => setActiveMainTab('simulators')}
             onLaunchQuiz={() => setActiveMainTab('quizzes')}
+            onExportReport={() => setIsExportReportOpen(true)}
           />
         )}
 
@@ -1319,7 +1384,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
             <p className="font-semibold text-slate-700">
-              BuzToolz · Executive Strategy, Operations, Finance, Product & Data Analytics Platform
+              BizTools · Executive Strategy, Operations, Finance, Product & Data Analytics Platform
             </p>
             <p className="mt-0.5 text-slate-500">
               by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
@@ -1362,6 +1427,13 @@ export default function App() {
             setActiveMainTab(view);
           }
         }}
+      />
+
+      {/* Printable / Downloadable PDF Report Modal */}
+      <SimulatorReportModal
+        tool={currentTool}
+        isOpen={isExportReportOpen}
+        onClose={() => setIsExportReportOpen(false)}
       />
     </div>
   );
