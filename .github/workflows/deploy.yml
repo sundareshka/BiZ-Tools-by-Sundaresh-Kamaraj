@@ -58,7 +58,7 @@ jobs:
           port: 21
           security: loose
           local-dir: ./
-          server-dir: /BiZ-Tools-source/
+          server-dir: /
           state-name: .ftp-state-source.json
           dangerous-clean-slate: false
           exclude: |
@@ -82,7 +82,7 @@ jobs:
           port: 21
           security: loose
           local-dir: ./dist/
-          server-dir: /public_html/
+          server-dir: /
           state-name: .ftp-state-production.json
           dangerous-clean-slate: false
           exclude: |
