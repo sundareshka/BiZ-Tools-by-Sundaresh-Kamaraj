@@ -674,13 +674,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-slate-200 overflow-x-hidden w-full max-w-full">
       {/* 1. Top Global Navigation Bar - Clean, Organized Executive Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="h-16 flex items-center justify-between gap-2 sm:gap-4">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs w-full overflow-x-clip">
+        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 2xl:px-8">
+          <div className="h-16 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4">
             {/* Left: Brand Identity */}
             <div
               onClick={() => setActiveMainTab('home')}
-              className="flex items-center gap-2.5 sm:gap-3 shrink-0 cursor-pointer group"
+              className="flex items-center gap-2 sm:gap-2.5 shrink-0 cursor-pointer group"
               title="Return to BizTools Home"
             >
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-xs shrink-0 group-hover:scale-105 group-hover:border-indigo-400 group-hover:shadow-sm transition-all flex items-center justify-center">
@@ -692,12 +692,12 @@ export default function App() {
                 />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <h1 className="font-extrabold text-slate-900 group-hover:text-indigo-950 tracking-tight text-lg sm:text-xl leading-none font-display transition-colors">
                     BizTools
                   </h1>
-                  <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 tracking-wide font-mono hidden md:inline-block">
-                    57 Tools · 10 Pillars
+                  <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 tracking-wide font-mono hidden 2xl:inline-block">
+                    v1.20 · 57 Tools · 10 Pillars
                   </span>
                 </div>
                 <div
@@ -718,8 +718,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Center: Primary View Navigation Tabs (Clean segmented control for large screens) */}
-            <nav className="hidden xl:flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 text-xs font-semibold gap-0.5">
+            {/* Center: Primary View Navigation Tabs (Clean segmented control for very wide screens) */}
+            <nav className="hidden 2xl:flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 text-xs font-semibold gap-0.5 shrink-0">
               <button
                 onClick={() => setActiveMainTab('home')}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -815,48 +815,48 @@ export default function App() {
             </nav>
 
             {/* Right: Quick Search, Recommender, Workshop, Dossier, Workspace & Progress Hub */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0">
               {/* PWA Install Trigger */}
               <PWAInstallButton />
 
               {/* Strategy Chain Runner Workshop */}
               <button
                 onClick={() => setIsChainRunnerOpen(true)}
-                className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
                 title="Launch Multi-Tool Strategic Chain Workshop"
               >
-                <Compass className="w-3.5 h-3.5 text-purple-600" />
-                <span className="font-medium">Workshop</span>
+                <Compass className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                <span className="hidden 2xl:inline font-medium">Workshop</span>
               </button>
 
               {/* Executive Strategy Dossier PDF Binder */}
               <button
                 onClick={() => setIsDossierModalOpen(true)}
-                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-2xs shrink-0"
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-2xs shrink-0"
                 title="Compile Boardroom Briefing Dossier & PDF Binder"
               >
-                <FileText className="w-3.5 h-3.5 text-indigo-300" />
-                <span className="font-medium">Dossier</span>
+                <FileText className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+                <span className="hidden 2xl:inline font-medium">Dossier</span>
               </button>
 
               {/* Framework Recommender Wizard */}
               <button
                 onClick={() => setIsRecommenderOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
                 title="Launch 3-Step Framework Recommender Wizard (Hotkey: R)"
               >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="hidden xl:inline font-medium">Recommender</span>
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span className="hidden 2xl:inline font-medium">Recommender</span>
               </button>
 
               {/* My Workspace Drawer Trigger */}
               <button
                 onClick={() => setIsWorkspaceDrawerOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
                 title="Open My Workspace Drawer (Hotkey: W)"
               >
-                <Bookmark className="w-3.5 h-3.5 text-amber-500 fill-amber-100" />
-                <span className="hidden sm:inline">Workspace</span>
+                <Bookmark className="w-3.5 h-3.5 text-amber-500 fill-amber-100 shrink-0" />
+                <span className="hidden 2xl:inline">Workspace</span>
                 <span className="text-3xs font-mono font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-full">
                   {progress.savedWorkspace?.length || 0}
                 </span>
@@ -865,7 +865,7 @@ export default function App() {
               {/* Keyboard Shortcuts Trigger */}
               <button
                 onClick={() => setIsShortcutsOpen(true)}
-                className="hidden md:flex p-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-2xs shrink-0"
+                className="hidden sm:flex p-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-2xs shrink-0"
                 title="Keyboard Shortcuts Cheatsheet (Hotkey: ?)"
                 aria-label="Keyboard Shortcuts"
               >
@@ -875,7 +875,7 @@ export default function App() {
               {/* Search Trigger */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/90 border border-slate-200/90 text-slate-500 hover:text-slate-800 text-xs px-2 sm:px-3 py-1.5 rounded-xl transition-all w-9 sm:w-36 md:w-44 justify-center sm:justify-between group shadow-2xs shrink-0"
+                className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/90 border border-slate-200/90 text-slate-500 hover:text-slate-800 text-xs px-2 sm:px-2.5 py-1.5 rounded-xl transition-all w-9 sm:w-28 md:w-32 lg:w-36 2xl:w-44 justify-center sm:justify-between group shadow-2xs shrink-0"
                 title="Search 57 frameworks (Cmd+K or /)"
               >
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -901,8 +901,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Secondary View Navigation (Clean horizontal strip for mobile/tablet screens < xl) */}
-        <div className="xl:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs font-semibold">
+        {/* Secondary View Navigation (Clean horizontal strip for screens < 2xl) */}
+        <div className="2xl:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs font-semibold">
           <button
             onClick={() => setActiveMainTab('home')}
             className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -2134,7 +2134,7 @@ export default function App() {
               BizTools · Executive Strategy, Operations, Finance, Product & Data Analytics Platform
             </p>
             <p className="mt-0.5 text-slate-500">
-              by Sundaresh Kamaraj · Version 1.0 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
+              by Sundaresh Kamaraj · Version 1.20 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
             </p>
           </div>
 

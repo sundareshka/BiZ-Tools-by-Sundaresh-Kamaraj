@@ -16,11 +16,11 @@ export const PWAInstallButton: React.FC = () => {
     return (
       <button
         onClick={install}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-xs shrink-0"
+        className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-xs shrink-0"
         title="Install BizTools app on your device for offline strategy simulations"
       >
-        <DownloadCloud className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="hidden sm:inline">Install App</span>
+        <DownloadCloud className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <span className="hidden 2xl:inline">Install App</span>
       </button>
     );
   }
@@ -31,11 +31,11 @@ export const PWAInstallButton: React.FC = () => {
       <>
         <button
           onClick={() => setShowIOSGuide(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 transition-all cursor-pointer shadow-2xs shrink-0"
+          className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 transition-all cursor-pointer shadow-2xs shrink-0"
           title="Install BizTools on iPhone or iPad"
         >
-          <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
-          <span className="hidden sm:inline">Install PWA</span>
+          <Smartphone className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+          <span className="hidden 2xl:inline">Install PWA</span>
         </button>
 
         {showIOSGuide && (
@@ -91,10 +91,10 @@ export const PWAInstallButton: React.FC = () => {
         // Trigger ambient instructions modal
         setShowIOSGuide(true);
       }}
-      className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 transition-all cursor-pointer shadow-2xs shrink-0"
-      title="Install BizTools PWA on your device"
+      className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 transition-all cursor-pointer shadow-2xs shrink-0"
+      title="Install BizTools PWA on your device for offline strategy simulations"
     >
-      <Laptop className="w-3.5 h-3.5 text-slate-500" />
+      <Laptop className="w-3.5 h-3.5 text-slate-500 shrink-0" />
       <span className="hidden 2xl:inline">Offline App</span>
     </button>
   );

@@ -194,6 +194,10 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
               <span>by Sundaresh Kamaraj</span>
               <span aria-hidden="true">·</span>
               <span className="text-amber-400 font-semibold font-mono">57 Core Frameworks</span>
+              <span aria-hidden="true">·</span>
+              <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-3xs font-mono font-bold">
+                Version 1.20
+              </span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.1] font-display text-balance">
