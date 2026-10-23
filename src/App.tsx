@@ -100,8 +100,14 @@ import { ProgressRing } from './components/ProgressRing.tsx';
 import { SimulatorReportModal } from './components/SimulatorReportModal.tsx';
 import { UserSessionPerformancePanel } from './components/UserSessionPerformancePanel.tsx';
 import { QuickJumpDropdown } from './components/QuickJumpDropdown.tsx';
+import { PillarMethodologyComparison } from './components/PillarMethodologyComparison.tsx';
+import { ToolExamplesModal } from './components/ToolExamplesModal.tsx';
+import { WorkspaceDrawer } from './components/WorkspaceDrawer.tsx';
+import { PillarMasteryCertificateModal } from './components/PillarMasteryCertificateModal.tsx';
+import { FrameworkRecommenderModal } from './components/FrameworkRecommenderModal.tsx';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal.tsx';
 import { TOOL_ICONS, getToolIcon } from './data/toolIcons.ts';
-import { useUserProgress, setSimulatorComplete, addSimulatorTimeSpent } from './utils/userProgress.ts';
+import { useUserProgress, setSimulatorComplete, addSimulatorTimeSpent, saveUserProgress, loadUserProgress } from './utils/userProgress.ts';
 import {
   Home,
   Download,
@@ -131,7 +137,13 @@ import {
   Search,
   Trophy,
   BrainCircuit,
-  Compass
+  Compass,
+  Share2,
+  Check,
+  Bookmark,
+  BookmarkCheck,
+  Award,
+  Keyboard
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -153,15 +165,100 @@ const ALL_TOOLS: ToolDefinition[] = RAW_TOOLS.map(tool => ({
 }));
 
 export default function App() {
-  const [activeMainTab, setActiveMainTab] = useState<'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance'>('home');
-  const [selectedToolId, setSelectedToolId] = useState<string>('swot');
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>('Analytics');
+  // Read URL query parameters on initial load for deep linking
+  const [initialDeepLink] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tool = params.get('tool');
+      const tab = params.get('tab') as 'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance' | null;
+      const category = params.get('category') as any;
+      const compare = params.get('compare');
+      return { tool, tab, category, compare };
+    } catch {
+      return null;
+    }
+  });
+
+  const [activeMainTab, setActiveMainTab] = useState<'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance'>(() => {
+    if (initialDeepLink?.tab) return initialDeepLink.tab;
+    if (initialDeepLink?.tool) return 'simulators';
+    return 'home';
+  });
+  const [selectedToolId, setSelectedToolId] = useState<string>(() => {
+    if (initialDeepLink?.tool && ALL_TOOLS.some(t => t.id === initialDeepLink.tool)) {
+      return initialDeepLink.tool;
+    }
+    return 'swot';
+  });
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Strategy' | 'Innovation' | 'Marketing' | 'Operations' | 'Financial' | 'Project' | 'HR' | 'Risk' | 'Product' | 'Analytics'>(() => {
+    if (initialDeepLink?.category) return initialDeepLink.category;
+    if (initialDeepLink?.tool) {
+      const matched = ALL_TOOLS.find(t => t.id === initialDeepLink.tool);
+      if (matched) {
+        if (matched.category.includes('Analytics')) return 'Analytics';
+        if (matched.category.includes('Product')) return 'Product';
+        if (matched.category.includes('Risk')) return 'Risk';
+        if (matched.category.includes('HR')) return 'HR';
+        if (matched.category.includes('Project')) return 'Project';
+        if (matched.category.includes('Financial')) return 'Financial';
+        if (matched.category.includes('Operations')) return 'Operations';
+        if (matched.category.includes('Marketing')) return 'Marketing';
+        if (matched.category.includes('Innovation')) return 'Innovation';
+        return 'Strategy';
+      }
+    }
+    return 'Analytics';
+  });
   const [showCurriculumOverview, setShowCurriculumOverview] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isExportReportOpen, setIsExportReportOpen] = useState<boolean>(false);
+  const [isCompareOpen, setIsCompareOpen] = useState<boolean>(() => {
+    return Boolean(initialDeepLink?.compare);
+  });
+  const [compareSecondaryToolId, setCompareSecondaryToolId] = useState<string>(() => {
+    return initialDeepLink?.compare || '';
+  });
+  const [copiedShareLink, setCopiedShareLink] = useState<boolean>(false);
+  const [shareFeedbackMsg, setShareFeedbackMsg] = useState<string | null>(null);
+  const [isExamplesModalOpen, setIsExamplesModalOpen] = useState<boolean>(false);
+  const [workspaceToastMsg, setWorkspaceToastMsg] = useState<string | null>(null);
+
+  // Additional workflow modals & actions
+  const [isWorkspaceDrawerOpen, setIsWorkspaceDrawerOpen] = useState<boolean>(false);
+  const [isCertificateModalOpen, setIsCertificateModalOpen] = useState<boolean>(false);
+  const [isRecommenderOpen, setIsRecommenderOpen] = useState<boolean>(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
+  const [appliedTemplateToast, setAppliedTemplateToast] = useState<string | null>(null);
+
+  const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
+  const currentIndex = ALL_TOOLS.findIndex(t => t.id === selectedToolId);
 
   // Persistent user learning progress hook
-  const { progress, toggleSimulator, isSimulatorDone, isQuizDone } = useUserProgress();
+  const { progress, toggleSimulator, isSimulatorDone, isQuizDone, toggleWorkspace, isSavedInWorkspace, getTimeSpent } = useUserProgress();
+
+  const handleToggleWorkspace = () => {
+    const isNowSaved = toggleWorkspace(currentTool.id);
+    setWorkspaceToastMsg(
+      isNowSaved
+        ? `Saved ${currentTool.shortName} to Workspace!`
+        : `Removed ${currentTool.shortName} from Workspace`
+    );
+    setTimeout(() => setWorkspaceToastMsg(null), 2500);
+  };
+
+  const handleClearWorkspace = () => {
+    const current = loadUserProgress();
+    saveUserProgress({ ...current, savedWorkspace: [] });
+    setWorkspaceToastMsg('Cleared all items from workspace');
+    setTimeout(() => setWorkspaceToastMsg(null), 2500);
+  };
+
+  const handleApplyTemplate = (scenarioName: string, _inputs: { label: string; value: string }[]) => {
+    setAppliedTemplateToast(`Applied "${scenarioName}" dataset to ${currentTool.shortName}!`);
+    setIsExamplesModalOpen(false);
+    setTimeout(() => setAppliedTemplateToast(null), 3000);
+  };
 
   // Dynamic pillar completion statistics for visual progress rings
   const pillarStats = useMemo(() => {
@@ -187,20 +284,6 @@ export default function App() {
     };
   }, [progress.completedSimulators]);
 
-  // Global hotkey to trigger search (Cmd+K / Ctrl+K or /)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(prev => !prev);
-      } else if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
-        e.preventDefault();
-        setIsSearchOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   // Auto-mark simulator as completed when active in simulator tab (registers after brief engagement)
   useEffect(() => {
@@ -222,8 +305,114 @@ export default function App() {
     }
   }, [activeMainTab, selectedToolId]);
 
-  const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
-  const currentIndex = ALL_TOOLS.findIndex(t => t.id === selectedToolId);
+  // Sibling tools in the active pillar for side-by-side methodology comparison
+  const currentPillarTools = useMemo(() => {
+    if (currentTool.category.includes('Analytics')) return ANALYTICS_TOOLS_DATA;
+    if (currentTool.category.includes('Product')) return PRODUCT_TOOLS_DATA;
+    if (currentTool.category.includes('Risk')) return RISK_TOOLS_DATA;
+    if (currentTool.category.includes('HR')) return HR_TOOLS_DATA;
+    if (currentTool.category.includes('Project')) return PROJECT_TOOLS_DATA;
+    if (currentTool.category.includes('Financial')) return FINANCIAL_TOOLS_DATA;
+    if (currentTool.category.includes('Operations')) return OPERATIONS_TOOLS_DATA;
+    if (currentTool.category.includes('Marketing')) return MARKETING_TOOLS_DATA;
+    if (currentTool.category.includes('Innovation')) return INNOVATION_TOOLS_DATA;
+    return TOOLS_DATA;
+  }, [currentTool.category]);
+
+  const currentSiblingTools = useMemo(() => {
+    return currentPillarTools.filter(t => t.id !== currentTool.id);
+  }, [currentPillarTools, currentTool.id]);
+
+  const secondaryTool = useMemo(() => {
+    const match = currentSiblingTools.find(t => t.id === compareSecondaryToolId);
+    return match || currentSiblingTools[0] || ALL_TOOLS[0];
+  }, [currentSiblingTools, compareSecondaryToolId]);
+
+  // Keep URL query parameters in sync with current view state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      if (activeMainTab === 'home') {
+        url.searchParams.delete('tab');
+        url.searchParams.delete('tool');
+        url.searchParams.delete('category');
+        url.searchParams.delete('compare');
+      } else {
+        url.searchParams.set('tab', activeMainTab);
+        if (activeMainTab === 'simulators' || activeMainTab === 'tools' || activeMainTab === 'quizzes') {
+          url.searchParams.set('tool', selectedToolId);
+          url.searchParams.set('category', categoryFilter);
+          if (isCompareOpen && compareSecondaryToolId) {
+            url.searchParams.set('compare', compareSecondaryToolId);
+          } else {
+            url.searchParams.delete('compare');
+          }
+        } else {
+          url.searchParams.delete('tool');
+          url.searchParams.delete('compare');
+        }
+      }
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // In case of cross-origin or iframe restrictions
+    }
+  }, [activeMainTab, selectedToolId, categoryFilter, isCompareOpen, compareSecondaryToolId]);
+
+  // Generate shareable deep-link URL and copy to clipboard
+  const handleShareCurrentSimulator = async () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', 'simulators');
+      url.searchParams.set('tool', currentTool.id);
+      url.searchParams.set('category', categoryFilter);
+      if (isCompareOpen && secondaryTool) {
+        url.searchParams.set('compare', secondaryTool.id);
+      } else {
+        url.searchParams.delete('compare');
+      }
+
+      const shareUrl = url.toString();
+
+      let copied = false;
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          copied = true;
+        } catch {
+          // fallback below
+        }
+      }
+
+      if (!copied) {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = shareUrl;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          copied = true;
+        } catch (err) {
+          console.error('Fallback clipboard copy failed', err);
+        }
+      }
+
+      if (copied) {
+        setCopiedShareLink(true);
+        setShareFeedbackMsg(`Copied deep-link for ${currentTool.shortName}!`);
+        setTimeout(() => {
+          setCopiedShareLink(false);
+          setShareFeedbackMsg(null);
+        }, 2500);
+      }
+    } catch (err) {
+      console.error('Failed to generate share URL', err);
+    }
+  };
 
   const filteredTools = ALL_TOOLS.filter(t => {
     if (categoryFilter === 'Strategy') return t.category.includes('Strategy');
@@ -321,6 +510,55 @@ export default function App() {
     const nextIdx = (currentIndex + 1) % ALL_TOOLS.length;
     handleSelectTool(ALL_TOOLS[nextIdx].id);
   };
+
+  // Global keyboard shortcuts & hotkey navigation listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName) || (e.target as HTMLElement)?.isContentEditable;
+
+      // Cmd+K or Ctrl+K triggers command search palette
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+        return;
+      }
+
+      // Guard single-character hotkeys from firing inside form inputs
+      if (isInput || e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === '/') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsOpen(prev => !prev);
+      } else if (e.key === '[') {
+        e.preventDefault();
+        handlePrevTool();
+      } else if (e.key === ']') {
+        e.preventDefault();
+        handleNextTool();
+      } else if (e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        setIsWorkspaceDrawerOpen(prev => !prev);
+      } else if (e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        setIsExamplesModalOpen(prev => !prev);
+      } else if (e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        setIsCompareOpen(prev => !prev);
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        setIsRecommenderOpen(prev => !prev);
+      } else if (e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleShareCurrentSimulator();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentIndex, isCompareOpen, currentTool]);
 
   // Helper for pillar styling
   const getToolPillarMeta = (tool: ToolDefinition) => {
@@ -539,8 +777,41 @@ export default function App() {
               </button>
             </nav>
 
-            {/* Right: Quick Search & Progress Hub */}
+            {/* Right: Quick Search, Recommender, Workspace & Progress Hub */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Framework Recommender Wizard */}
+              <button
+                onClick={() => setIsRecommenderOpen(true)}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Launch 3-Step Framework Recommender Wizard (Hotkey: R)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden xl:inline font-medium">Recommender</span>
+              </button>
+
+              {/* My Workspace Drawer Trigger */}
+              <button
+                onClick={() => setIsWorkspaceDrawerOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Open My Workspace Drawer (Hotkey: W)"
+              >
+                <Bookmark className="w-3.5 h-3.5 text-amber-500 fill-amber-100" />
+                <span className="hidden sm:inline">Workspace</span>
+                <span className="text-3xs font-mono font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-full">
+                  {progress.savedWorkspace?.length || 0}
+                </span>
+              </button>
+
+              {/* Keyboard Shortcuts Trigger */}
+              <button
+                onClick={() => setIsShortcutsOpen(true)}
+                className="hidden md:flex p-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Keyboard Shortcuts Cheatsheet (Hotkey: ?)"
+                aria-label="Keyboard Shortcuts"
+              >
+                <Keyboard className="w-3.5 h-3.5" />
+              </button>
+
               {/* Search Trigger */}
               <button
                 onClick={() => setIsSearchOpen(true)}
@@ -1211,21 +1482,23 @@ export default function App() {
         {activeMainTab === 'simulators' && (
           <div className="space-y-6">
             {/* Active Framework Context Header (Replaces the massive 4-card clutter) */}
+            {/* Active Framework Context Header */}
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${pillarMeta.badgeClass}`}>
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                {/* Left: Framework Identity & Context (Never squished) */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className={`text-2xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded border whitespace-nowrap shrink-0 ${pillarMeta.badgeClass}`}>
                       {pillarMeta.pillarNumber}: {pillarMeta.pillarName}
                     </span>
-                    <span className="text-2xs font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                    <span className="text-2xs font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
                       Tool #{currentIndex + 1} of {ALL_TOOLS.length}
                     </span>
-                    <span className="text-2xs text-slate-500 font-medium hidden sm:inline">
-                      Case: <span className="text-slate-700 font-semibold">{currentTool.caseStudy.company}</span>
+                    <span className="text-2xs text-slate-500 font-medium whitespace-nowrap">
+                      Case: <span className="text-slate-800 font-semibold">{currentTool.caseStudy.company}</span>
                     </span>
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
                     {(() => {
                       const ActiveToolIcon = currentTool.icon || getToolIcon(currentTool.id);
                       return (
@@ -1234,60 +1507,157 @@ export default function App() {
                         </div>
                       );
                     })()}
-                    <span>{currentTool.name}</span>
+                    <span className="truncate">{currentTool.name}</span>
                   </h2>
                   <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">
-                    {currentTool.tagline} · {currentTool.corePurpose}
+                    {currentTool.tagline} · <span className="text-slate-500">{currentTool.corePurpose}</span>
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 self-start md:self-center flex-wrap">
-                  {/* Interactive Simulator Completion Toggle (localStorage) */}
-                  <button
-                    onClick={() => toggleSimulator(currentTool.id)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      isSimulatorDone(currentTool.id)
-                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200 shadow-2xs font-bold'
-                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-2xs'
-                    }`}
-                    title={isSimulatorDone(currentTool.id) ? 'Simulator completed in localStorage (click to toggle)' : 'Mark this simulator as completed'}
-                  >
-                    <CheckCircle2 className={`w-3.5 h-3.5 ${isSimulatorDone(currentTool.id) ? 'text-emerald-600' : 'text-slate-400'}`} />
-                    <span>{isSimulatorDone(currentTool.id) ? 'Simulator Completed' : 'Mark Completed'}</span>
-                  </button>
+                {/* Right: Actions in Two Neat, Organized Rows */}
+                <div className="flex flex-col gap-2 shrink-0 self-start lg:self-end">
+                  {/* Button Row 1: Execution, Workspace & Utilities */}
+                  <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                    {/* Interactive Simulator Completion Toggle */}
+                    <button
+                      onClick={() => toggleSimulator(currentTool.id)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                        isSimulatorDone(currentTool.id)
+                          ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200 shadow-2xs font-bold'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-2xs'
+                      }`}
+                      title={isSimulatorDone(currentTool.id) ? 'Simulator completed in localStorage (click to toggle)' : 'Mark this simulator as completed'}
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 ${isSimulatorDone(currentTool.id) ? 'text-emerald-600' : 'text-slate-400'}`} />
+                      <span>{isSimulatorDone(currentTool.id) ? 'Completed' : 'Mark Done'}</span>
+                    </button>
 
-                  <button
-                    onClick={() => setActiveMainTab('tools')}
-                    className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Deep Guide</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveMainTab('quizzes')}
-                    className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <CheckCircle2 className={`w-3.5 h-3.5 ${isQuizDone(currentTool.id) ? 'text-indigo-600' : 'text-slate-400'}`} />
-                    <span>{isQuizDone(currentTool.id) ? 'Quiz Passed' : 'Quiz (5 Qs)'}</span>
-                  </button>
-                  <button
-                    onClick={() => setShowCurriculumOverview(!showCurriculumOverview)}
-                    className="px-3 py-1.5 text-xs font-semibold text-slate-700 border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <Layers className="w-3.5 h-3.5 text-slate-500" />
-                    <span>{showCurriculumOverview ? 'Hide Blueprint' : 'Curriculum Blueprint'}</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCurriculumOverview ? 'rotate-180' : ''}`} />
-                  </button>
+                    {/* Quick Action: Save to Workspace (localStorage) */}
+                    <button
+                      onClick={handleToggleWorkspace}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 shadow-2xs ${
+                        isSavedInWorkspace(currentTool.id)
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 font-bold shadow-xs'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                      title={isSavedInWorkspace(currentTool.id) ? 'Saved in personal workspace (click to remove)' : 'Save this framework to your personal workspace (stored locally)'}
+                    >
+                      {isSavedInWorkspace(currentTool.id) ? (
+                        <>
+                          <BookmarkCheck className="w-3.5 h-3.5 text-amber-600" />
+                          <span>In Workspace</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Save to Workspace</span>
+                        </>
+                      )}
+                    </button>
 
-                  {/* Export PDF Report Button */}
-                  <button
-                    onClick={() => setIsExportReportOpen(true)}
-                    className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                    title="Export completed simulator session data as a printable PDF report"
-                  >
-                    <Download className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Export PDF Report</span>
-                  </button>
+                    {/* Quick Action: View Examples (Pop-up Modal with Mock Data) */}
+                    <button
+                      onClick={() => setIsExamplesModalOpen(true)}
+                      className="px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
+                      title="View realistic mock data examples, industry templates, and deep case studies"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>View Examples</span>
+                    </button>
+
+                    {/* Export PDF Report Button */}
+                    <button
+                      onClick={() => setIsExportReportOpen(true)}
+                      className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
+                      title="Export completed simulator session data as a printable PDF report"
+                    >
+                      <Download className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Export PDF</span>
+                    </button>
+
+                    {/* Share Deep-Link Button */}
+                    <button
+                      onClick={handleShareCurrentSimulator}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0 ${
+                        copiedShareLink
+                          ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-400/40 shadow-xs'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                      title="Copy shareable deep-link URL for this simulator and active configuration"
+                      aria-label="Share simulator deep-link"
+                    >
+                      {copiedShareLink ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-200" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Share</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Pillar Mastery Certificate (Earned when pillar reaches 100%) */}
+                    {(categoryFilter === 'All' ? pillarStats.All.percentage === 100 : (pillarStats[categoryFilter]?.percentage === 100)) && (
+                      <button
+                        onClick={() => setIsCertificateModalOpen(true)}
+                        className="px-3 py-1.5 text-xs font-bold text-amber-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-300 hover:from-amber-400 hover:to-yellow-500 border border-amber-500 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap shrink-0 animate-pulse"
+                        title="View, personalize, and export your official executive Pillar Mastery Certificate"
+                      >
+                        <Award className="w-3.5 h-3.5 text-amber-900" />
+                        <span>Mastery Certificate</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Button Row 2: Learning & Navigation Guides */}
+                  <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap justify-start lg:justify-end">
+                    {/* Compare within Pillar Button */}
+                    <button
+                      onClick={() => setIsCompareOpen(!isCompareOpen)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                        isCompareOpen
+                          ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                          : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100 shadow-2xs'
+                      }`}
+                      title={`Compare methodology differences side-by-side with ${currentSiblingTools.length} peer tools in ${pillarMeta.pillarName}`}
+                    >
+                      <GitCompare className="w-3.5 h-3.5" />
+                      <span>Compare in Pillar</span>
+                      <span className={`text-3xs font-mono font-bold px-1.5 py-0.2 rounded ${
+                        isCompareOpen ? 'bg-indigo-700 text-white' : 'bg-indigo-200/80 text-indigo-900'
+                      }`}>
+                        {currentSiblingTools.length} peers
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveMainTab('tools')}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Deep Guide</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveMainTab('quizzes')}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 ${isQuizDone(currentTool.id) ? 'text-indigo-600' : 'text-slate-400'}`} />
+                      <span>{isQuizDone(currentTool.id) ? 'Quiz Passed' : 'Quiz (5 Qs)'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowCurriculumOverview(!showCurriculumOverview)}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      <Layers className="w-3.5 h-3.5 text-slate-500" />
+                      <span>{showCurriculumOverview ? 'Hide Blueprint' : 'Curriculum Blueprint'}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCurriculumOverview ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1530,6 +1900,29 @@ export default function App() {
               )}
             </div>
 
+            {/* Compare within Pillar Side-by-Side Methodology Benchmark */}
+            {isCompareOpen && secondaryTool && (
+              <PillarMethodologyComparison
+                primaryTool={currentTool}
+                secondaryTool={secondaryTool}
+                siblingTools={currentSiblingTools}
+                pillarNumber={pillarMeta.pillarNumber}
+                pillarName={pillarMeta.pillarName}
+                onSelectSecondaryTool={(id) => setCompareSecondaryToolId(id)}
+                onSwapTools={() => {
+                  const oldPrimary = currentTool.id;
+                  const oldSecondary = secondaryTool.id;
+                  handleSelectTool(oldSecondary);
+                  setCompareSecondaryToolId(oldPrimary);
+                }}
+                onSwitchSimulator={(id) => {
+                  handleSelectTool(id);
+                  setIsCompareOpen(false);
+                }}
+                onClose={() => setIsCompareOpen(false)}
+              />
+            )}
+
             {/* Category 1: Strategy & Planning */}
             {selectedToolId === 'swot' && <SWOTSimulator />}
             {selectedToolId === 'pestle' && <PESTLESimulator />}
@@ -1706,6 +2099,99 @@ export default function App() {
         isOpen={isExportReportOpen}
         onClose={() => setIsExportReportOpen(false)}
       />
+
+      {/* Real-World Examples & Mock Datasets Modal (with 1-Click Apply to Simulator) */}
+      <ToolExamplesModal
+        tool={currentTool}
+        isOpen={isExamplesModalOpen}
+        onClose={() => setIsExamplesModalOpen(false)}
+        onApplyTemplate={handleApplyTemplate}
+      />
+
+      {/* Personal Workspace Drawer (Saved Frameworks Slide-out) */}
+      <WorkspaceDrawer
+        isOpen={isWorkspaceDrawerOpen}
+        onClose={() => setIsWorkspaceDrawerOpen(false)}
+        savedToolIds={progress.savedWorkspace || []}
+        allTools={ALL_TOOLS}
+        onSelectTool={(toolId) => {
+          handleSelectTool(toolId);
+          setActiveMainTab('simulators');
+        }}
+        onRemoveFromWorkspace={(toolId) => {
+          toggleWorkspace(toolId);
+        }}
+        onClearWorkspace={handleClearWorkspace}
+        isSimulatorDone={isSimulatorDone}
+        getTimeSpent={getTimeSpent}
+      />
+
+      {/* Official Pillar Mastery Certificate / Diploma Modal */}
+      <PillarMasteryCertificateModal
+        isOpen={isCertificateModalOpen}
+        onClose={() => setIsCertificateModalOpen(false)}
+        pillarName={categoryFilter === 'All' ? 'Complete 57 Framework Curriculum' : `${categoryFilter} Pillar`}
+        pillarNumber={categoryFilter === 'All' ? '10 Pillars / 57 Frameworks' : (pillarMeta.pillarNumber || 'Pillar')}
+        completionPercentage={categoryFilter === 'All' ? pillarStats.All.percentage : (pillarStats[categoryFilter]?.percentage || 100)}
+        completedCount={categoryFilter === 'All' ? pillarStats.All.completed : (pillarStats[categoryFilter]?.completed || 0)}
+        totalCount={categoryFilter === 'All' ? pillarStats.All.total : (pillarStats[categoryFilter]?.total || 0)}
+      />
+
+      {/* 3-Step Sequential Framework Recommender Wizard Modal */}
+      <FrameworkRecommenderModal
+        isOpen={isRecommenderOpen}
+        onClose={() => setIsRecommenderOpen(false)}
+        allTools={ALL_TOOLS}
+        onSelectTool={(toolId) => {
+          handleSelectTool(toolId);
+          setActiveMainTab('simulators');
+        }}
+      />
+
+      {/* Keyboard Shortcuts Cheatsheet Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* Floating Toast Notification for 1-Click Applied Template */}
+      {appliedTemplateToast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl border border-slate-700 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <PlayCircle className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <div className="font-bold text-white leading-tight">Template Applied to Simulator</div>
+            <div className="text-3xs text-slate-300 font-normal">{appliedTemplateToast}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification for Workspace Updates */}
+      {workspaceToastMsg && (
+        <div className="fixed bottom-6 left-6 z-50 flex items-center gap-2.5 px-4 py-2.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl border border-slate-700 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <Bookmark className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <div className="font-bold text-white leading-tight">Workspace Updated</div>
+            <div className="text-3xs text-slate-300 font-normal">{workspaceToastMsg}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification for Copied Share Link */}
+      {shareFeedbackMsg && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl border border-slate-700 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <Check className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <div className="font-bold text-white leading-tight">Link Copied to Clipboard</div>
+            <div className="text-3xs text-slate-300 font-normal">{shareFeedbackMsg}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

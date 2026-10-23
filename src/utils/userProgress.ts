@@ -5,6 +5,7 @@ export interface UserProgressData {
   completedQuizzes: string[];
   quizAnswers: Record<string, number>;
   simulatorTimeSpent: Record<string, number>; // in seconds
+  savedWorkspace?: string[]; // IDs of tools saved in the user's workspace
   lastUpdated?: number;
 }
 
@@ -16,6 +17,7 @@ const DEFAULT_PROGRESS: UserProgressData = {
   completedQuizzes: [],
   quizAnswers: {},
   simulatorTimeSpent: {},
+  savedWorkspace: [],
   lastUpdated: Date.now()
 };
 
@@ -30,6 +32,7 @@ export function loadUserProgress(): UserProgressData {
       completedQuizzes: Array.isArray(parsed.completedQuizzes) ? parsed.completedQuizzes : [],
       quizAnswers: parsed.quizAnswers && typeof parsed.quizAnswers === 'object' ? parsed.quizAnswers : {},
       simulatorTimeSpent: parsed.simulatorTimeSpent && typeof parsed.simulatorTimeSpent === 'object' ? parsed.simulatorTimeSpent : {},
+      savedWorkspace: Array.isArray(parsed.savedWorkspace) ? parsed.savedWorkspace : [],
       lastUpdated: parsed.lastUpdated || Date.now()
     };
   } catch (e) {
@@ -162,6 +165,27 @@ export function addSimulatorTimeSpent(toolId: string, secondsToAdd: number): voi
       [toolId]: currentSecs + secondsToAdd
     }
   });
+}
+
+export function toggleSaveToWorkspace(toolId: string): boolean {
+  const current = loadUserProgress();
+  const saved = current.savedWorkspace || [];
+  const exists = saved.includes(toolId);
+  const nextSaved = exists
+    ? saved.filter(id => id !== toolId)
+    : [...saved, toolId];
+
+  saveUserProgress({
+    ...current,
+    savedWorkspace: nextSaved
+  });
+
+  return !exists;
+}
+
+export function isToolInWorkspace(toolId: string): boolean {
+  const current = loadUserProgress();
+  return (current.savedWorkspace || []).includes(toolId);
 }
 
 export function seedSamplePerformanceData(): void {
@@ -304,6 +328,15 @@ export function useUserProgress() {
     [progress.completedQuizzes]
   );
 
+  const isSavedInWorkspace = useCallback(
+    (toolId: string) => (progress.savedWorkspace || []).includes(toolId),
+    [progress.savedWorkspace]
+  );
+
+  const toggleWorkspace = useCallback((toolId: string) => {
+    return toggleSaveToWorkspace(toolId);
+  }, []);
+
   const getTimeSpent = useCallback(
     (toolId: string) => progress.simulatorTimeSpent?.[toolId] || 0,
     [progress.simulatorTimeSpent]
@@ -317,8 +350,10 @@ export function useUserProgress() {
     progress,
     toggleSimulator,
     toggleQuiz,
+    toggleWorkspace,
     isSimulatorDone,
     isQuizDone,
+    isSavedInWorkspace,
     getTimeSpent,
     addTimeSpent,
     seedSampleData: seedSamplePerformanceData,
