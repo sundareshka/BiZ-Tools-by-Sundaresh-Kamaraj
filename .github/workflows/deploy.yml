@@ -27,13 +27,17 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      # 4. Build frontend
+      # 4. Install missing react-is dependency
+      - name: Install react-is
+        run: npm install react-is --save --legacy-peer-deps
+
+      # 5. Build frontend
       - name: Build frontend
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.APP_URL }}
 
-      # 5. Verify build output
+      # 6. Verify build output
       - name: Verify build output
         run: |
           if [ ! -d "dist" ]; then
@@ -43,7 +47,7 @@ jobs:
           echo "Build completed successfully."
           ls -la dist
 
-      # 6. Upload source files to the backup/source directory
+      # 7. Upload source files to cPanel
       - name: Upload source to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -54,7 +58,7 @@ jobs:
           port: 21
           security: loose
           local-dir: ./
-          server-dir: /
+          server-dir: /BiZ-Tools-source/
           state-name: .ftp-state-source.json
           dangerous-clean-slate: false
           exclude: |
@@ -67,7 +71,7 @@ jobs:
             !**/.env.example
             **/.github/**
 
-      # 7. Upload production build to the website directory
+      # 8. Deploy production build to cPanel
       - name: Deploy production build to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -78,7 +82,7 @@ jobs:
           port: 21
           security: loose
           local-dir: ./dist/
-          server-dir: /dist/
+          server-dir: /public_html/
           state-name: .ftp-state-production.json
           dangerous-clean-slate: false
           exclude: |
