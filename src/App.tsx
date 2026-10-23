@@ -106,6 +106,13 @@ import { WorkspaceDrawer } from './components/WorkspaceDrawer.tsx';
 import { PillarMasteryCertificateModal } from './components/PillarMasteryCertificateModal.tsx';
 import { FrameworkRecommenderModal } from './components/FrameworkRecommenderModal.tsx';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal.tsx';
+import { PWAInstallButton } from './components/PWAInstallButton.tsx';
+import { OfflineIndicator } from './components/OfflineIndicator.tsx';
+import { SimulatorPresetToolbar } from './components/SimulatorPresetToolbar.tsx';
+import { ScenarioSnapshotModal } from './components/ScenarioSnapshotModal.tsx';
+import { ExecutiveStrategyDossierModal } from './components/ExecutiveStrategyDossierModal.tsx';
+import { StrategyChainRunnerModal } from './components/StrategyChainRunnerModal.tsx';
+import { getSnapshotsForTool, ScenarioSnapshot } from './utils/scenarioSnapshots.ts';
 import { TOOL_ICONS, getToolIcon } from './data/toolIcons.ts';
 import { useUserProgress, setSimulatorComplete, addSimulatorTimeSpent, saveUserProgress, loadUserProgress } from './utils/userProgress.ts';
 import {
@@ -143,7 +150,8 @@ import {
   Bookmark,
   BookmarkCheck,
   Award,
-  Keyboard
+  Keyboard,
+  Camera
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -231,8 +239,37 @@ export default function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [appliedTemplateToast, setAppliedTemplateToast] = useState<string | null>(null);
 
+  // New High-Impact Feature States
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState<boolean>(false);
+  const [isDossierModalOpen, setIsDossierModalOpen] = useState<boolean>(false);
+  const [isChainRunnerOpen, setIsChainRunnerOpen] = useState<boolean>(false);
+  const [snapshotCount, setSnapshotCount] = useState<number>(0);
+
   const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
   const currentIndex = ALL_TOOLS.findIndex(t => t.id === selectedToolId);
+
+  useEffect(() => {
+    setSnapshotCount(getSnapshotsForTool(selectedToolId).length);
+    setActivePresetId(null);
+  }, [selectedToolId]);
+
+  const handleSelectPreset = (presetId: string, presetName: string, _inputs: { label: string; value: string }[]) => {
+    setActivePresetId(presetId);
+    setAppliedTemplateToast(`Loaded "${presetName}" profile into ${currentTool.shortName}!`);
+    setTimeout(() => setAppliedTemplateToast(null), 3000);
+  };
+
+  const handleResetDefault = () => {
+    setActivePresetId(null);
+    setAppliedTemplateToast(`Reset ${currentTool.shortName} to baseline model`);
+    setTimeout(() => setAppliedTemplateToast(null), 2500);
+  };
+
+  const handleApplySnapshot = (snapshot: ScenarioSnapshot) => {
+    setAppliedTemplateToast(`Restored snapshot "${snapshot.name}" into ${currentTool.shortName}!`);
+    setTimeout(() => setAppliedTemplateToast(null), 3000);
+  };
 
   // Persistent user learning progress hook
   const { progress, toggleSimulator, isSimulatorDone, isQuizDone, toggleWorkspace, isSavedInWorkspace, getTimeSpent } = useUserProgress();
@@ -777,12 +814,35 @@ export default function App() {
               </button>
             </nav>
 
-            {/* Right: Quick Search, Recommender, Workspace & Progress Hub */}
+            {/* Right: Quick Search, Recommender, Workshop, Dossier, Workspace & Progress Hub */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* PWA Install Trigger */}
+              <PWAInstallButton />
+
+              {/* Strategy Chain Runner Workshop */}
+              <button
+                onClick={() => setIsChainRunnerOpen(true)}
+                className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Launch Multi-Tool Strategic Chain Workshop"
+              >
+                <Compass className="w-3.5 h-3.5 text-purple-600" />
+                <span className="font-medium">Workshop</span>
+              </button>
+
+              {/* Executive Strategy Dossier PDF Binder */}
+              <button
+                onClick={() => setIsDossierModalOpen(true)}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Compile Boardroom Briefing Dossier & PDF Binder"
+              >
+                <FileText className="w-3.5 h-3.5 text-indigo-300" />
+                <span className="font-medium">Dossier</span>
+              </button>
+
               {/* Framework Recommender Wizard */}
               <button
                 onClick={() => setIsRecommenderOpen(true)}
-                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
                 title="Launch 3-Step Framework Recommender Wizard (Hotkey: R)"
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
@@ -1565,6 +1625,19 @@ export default function App() {
                       <span>View Examples</span>
                     </button>
 
+                    {/* Scenario Snapshot Vault Trigger */}
+                    <button
+                      onClick={() => setIsSnapshotModalOpen(true)}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
+                      title="Manage, compare, and restore saved scenario snapshots for this framework"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-slate-600" />
+                      <span>Snapshots</span>
+                      <span className="text-3xs font-mono font-bold px-1.5 py-0.2 rounded bg-slate-200 text-slate-800">
+                        {snapshotCount}
+                      </span>
+                    </button>
+
                     {/* Export PDF Report Button */}
                     <button
                       onClick={() => setIsExportReportOpen(true)}
@@ -1923,6 +1996,16 @@ export default function App() {
               />
             )}
 
+            {/* 1-Click Industry Presets Toolbar & Snapshot Trigger */}
+            <SimulatorPresetToolbar
+              tool={currentTool}
+              activePresetId={activePresetId}
+              onSelectPreset={handleSelectPreset}
+              onResetDefault={handleResetDefault}
+              onOpenSnapshots={() => setIsSnapshotModalOpen(true)}
+              snapshotCount={snapshotCount}
+            />
+
             {/* Category 1: Strategy & Planning */}
             {selectedToolId === 'swot' && <SWOTSimulator />}
             {selectedToolId === 'pestle' && <PESTLESimulator />}
@@ -2152,6 +2235,41 @@ export default function App() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* Offline Status Connectivity Badge */}
+      <OfflineIndicator />
+
+      {/* Scenario Snapshot Vault Modal */}
+      <ScenarioSnapshotModal
+        tool={currentTool}
+        isOpen={isSnapshotModalOpen}
+        onClose={() => {
+          setIsSnapshotModalOpen(false);
+          setSnapshotCount(getSnapshotsForTool(selectedToolId).length);
+        }}
+        onApplySnapshot={handleApplySnapshot}
+      />
+
+      {/* Executive Strategy Dossier PDF Binder Modal */}
+      <ExecutiveStrategyDossierModal
+        isOpen={isDossierModalOpen}
+        onClose={() => setIsDossierModalOpen(false)}
+        allTools={ALL_TOOLS}
+        completedToolIds={progress.completedSimulators}
+        savedWorkspaceIds={progress.savedWorkspace || []}
+      />
+
+      {/* Interactive Strategy Chain Runner Workshop Modal */}
+      <StrategyChainRunnerModal
+        isOpen={isChainRunnerOpen}
+        onClose={() => setIsChainRunnerOpen(false)}
+        allTools={ALL_TOOLS}
+        onLaunchTool={(toolId) => {
+          handleSelectTool(toolId);
+          setActiveMainTab('simulators');
+        }}
+        isSimulatorDone={isSimulatorDone}
       />
 
       {/* Floating Toast Notification for 1-Click Applied Template */}

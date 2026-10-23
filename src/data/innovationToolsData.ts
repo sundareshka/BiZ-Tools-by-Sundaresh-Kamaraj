@@ -768,7 +768,7 @@ export const INNOVATION_TOOLS_DATA: ToolDefinition[] = [
     ],
     quiz: [
       {
-        id: 'dt-1',
+        id: 'designthinking-1',
         question: 'What are the five stages of the Stanford d.school Design Thinking model?',
         options: [
           'Plan, Build, Test, Launch, Review',
@@ -780,14 +780,14 @@ export const INNOVATION_TOOLS_DATA: ToolDefinition[] = [
         explanation: 'The d.school model comprises Empathise, Define, Ideate, Prototype, and Test.'
       },
       {
-        id: 'dt-2',
+        id: 'designthinking-2',
         question: 'In which stage of Design Thinking are "How Might We" (HMW) questions formulated?',
         options: ['Empathise', 'Define', 'Prototype', 'Test'],
         correctAnswer: 1,
         explanation: 'HMW questions are drafted in the Define stage to translate synthesised user insights into actionable creative springboards.'
       },
       {
-        id: 'dt-3',
+        id: 'designthinking-3',
         question: 'What is the primary objective of creating low-fidelity prototypes in Design Thinking?',
         options: [
           'To impress the executive sponsor with visual polish',
@@ -799,14 +799,14 @@ export const INNOVATION_TOOLS_DATA: ToolDefinition[] = [
         explanation: 'Low-fidelity prototypes exist to test specific hypotheses rapidly with users at minimal cost, allowing teams to fail and iterate early.'
       },
       {
-        id: 'dt-4',
+        id: 'designthinking-4',
         question: 'Which stage of Design Thinking is most frequently neglected or skipped in corporate practice?',
         options: ['Empathise', 'Ideate', 'Prototype', 'Test'],
         correctAnswer: 3,
         explanation: 'Teams frequently celebrate generating ideas or demoing a prototype, but fail to put it in front of real users to test whether it solves the problem.'
       },
       {
-        id: 'dt-5',
+        id: 'designthinking-5',
         question: 'The renowned "Double Diamond" innovation model was introduced by which institution?',
         options: ['IDEO', 'Stanford d.school', 'UK Design Council', 'Google Ventures'],
         correctAnswer: 2,

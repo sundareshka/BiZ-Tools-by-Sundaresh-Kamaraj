@@ -23,23 +23,33 @@ const ALL_TOOLS = [
   ...PRODUCT_TOOLS_DATA,
   ...ANALYTICS_TOOLS_DATA
 ];
-const ALL_STACKS = [
-  ...STRATEGY_STACKS,
-  ...CATEGORY_2_STACKS,
-  ...CATEGORY_3_STACKS,
-  ...CATEGORY_4_STACKS,
-  ...CATEGORY_5_STACKS,
-  ...CATEGORY_6_STACKS,
-  ...CATEGORY_7_STACKS,
-  ...CATEGORY_8_STACKS,
-  ...CATEGORY_9_STACKS,
-  ...CATEGORY_10_STACKS
+export interface PillarStackGroup {
+  id: string;
+  pillarNumber: number;
+  pillarName: string;
+  shortName: string;
+  category: string;
+  stacks: StrategyStack[];
+}
+
+export const PILLAR_STACK_GROUPS: PillarStackGroup[] = [
+  { id: 'p1', pillarNumber: 1, pillarName: 'Strategy & Planning', shortName: '1. Strategy', category: 'Strategy & Planning', stacks: STRATEGY_STACKS },
+  { id: 'p2', pillarNumber: 2, pillarName: 'Business Model Innovation', shortName: '2. Innovation', category: 'Business Model & Innovation', stacks: CATEGORY_2_STACKS },
+  { id: 'p3', pillarNumber: 3, pillarName: 'Marketing & Growth', shortName: '3. Marketing', category: 'Marketing & Growth', stacks: CATEGORY_3_STACKS },
+  { id: 'p4', pillarNumber: 4, pillarName: 'Operations & Process', shortName: '4. Operations', category: 'Operations & Process', stacks: CATEGORY_4_STACKS },
+  { id: 'p5', pillarNumber: 5, pillarName: 'Financial Performance', shortName: '5. Financial', category: 'Financial & Performance', stacks: CATEGORY_5_STACKS },
+  { id: 'p6', pillarNumber: 6, pillarName: 'Project Management', shortName: '6. Project', category: 'Project Management', stacks: CATEGORY_6_STACKS },
+  { id: 'p7', pillarNumber: 7, pillarName: 'HR & Organizational', shortName: '7. HR & Org', category: 'HR & Organizational', stacks: CATEGORY_7_STACKS },
+  { id: 'p8', pillarNumber: 8, pillarName: 'Risk & Decision-Making', shortName: '8. Risk', category: 'Risk & Decision-Making', stacks: CATEGORY_8_STACKS },
+  { id: 'p9', pillarNumber: 9, pillarName: 'Product & Startup', shortName: '9. Product', category: 'Product & Startup', stacks: CATEGORY_9_STACKS },
+  { id: 'p10', pillarNumber: 10, pillarName: 'Data & Analytics', shortName: '10. Analytics', category: 'Data & Analytics', stacks: CATEGORY_10_STACKS }
 ];
 
 export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: string) => void }) {
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('All');
   const [filterScope, setFilterScope] = useState<string>('All');
+  const [selectedPillarId, setSelectedPillarId] = useState<string>('p1');
   const [selectedStackId, setSelectedStackId] = useState<string>('stack-b');
   const [showExportModal, setShowExportModal] = useState(false);
 
@@ -49,7 +59,19 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
     return true;
   });
 
-  const currentStack = ALL_STACKS.find(s => s.id === selectedStackId) || ALL_STACKS[1];
+  const activePillarGroup = PILLAR_STACK_GROUPS.find(g => g.id === selectedPillarId) || PILLAR_STACK_GROUPS[0];
+  const currentStack = activePillarGroup.stacks.find(s => s.id === selectedStackId) || activePillarGroup.stacks[0];
+
+  const handleSelectPillar = (pillarId: string) => {
+    setSelectedPillarId(pillarId);
+    const group = PILLAR_STACK_GROUPS.find(g => g.id === pillarId);
+    if (group && group.stacks.length > 0) {
+      // Preserve corresponding organizational tier (Stack A, B, or C) if possible
+      const currentLetter = currentStack.id.slice(-1).toLowerCase();
+      const matchSameLetter = group.stacks.find(s => s.id.toLowerCase().endsWith(currentLetter));
+      setSelectedStackId(matchSameLetter ? matchSameLetter.id : group.stacks[0].id);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -70,7 +92,7 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
 
         <button
           onClick={() => setShowExportModal(true)}
-          className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5 shrink-0"
+          className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
         >
           <Printer className="w-3.5 h-3.5" />
           Strategy on a Page
@@ -79,25 +101,99 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
 
       {/* Recommended Strategy Stacks Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        {/* Header with Title and Pillar Dropdown */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h4 className="text-base font-bold text-slate-900">Recommended Organizational Tool Stacks</h4>
-            <p className="text-xs text-slate-500 mt-0.5">Frameworks are not sequential, but they chain well. Choose the stack matching your team size.</p>
+            <div className="flex items-center gap-2">
+              <span className="text-3xs font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                Pillar {activePillarGroup.pillarNumber} of 10
+              </span>
+              <h4 className="text-base font-bold text-slate-900">Recommended Organizational Tool Stacks</h4>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Select a pillar and team size scale to view tailored execution chains and cadences.
+            </p>
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 overflow-x-auto">
-            {ALL_STACKS.map(stack => (
+          {/* Quick Pillar Dropdown for mobile and fast switching */}
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-2xs self-start sm:self-auto">
+            <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">Pillar:</span>
+            <select
+              value={selectedPillarId}
+              onChange={(e) => handleSelectPillar(e.target.value)}
+              className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+            >
+              {PILLAR_STACK_GROUPS.map(group => (
+                <option key={group.id} value={group.id}>
+                  {group.shortName} — {group.pillarName}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 10 Pillars Horizontal Selector Rail */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          {PILLAR_STACK_GROUPS.map(group => {
+            const isPillarActive = group.id === selectedPillarId;
+            return (
+              <button
+                key={group.id}
+                onClick={() => handleSelectPillar(group.id)}
+                className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition-all cursor-pointer text-xs ${
+                  isPillarActive
+                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                {group.shortName}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 3 Distinct Organizational Tier Stack Cards / Tabs */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200">
+          {activePillarGroup.stacks.map(stack => {
+            const parts = stack.name.split('—');
+            const stackCode = parts[0]?.trim() || 'Stack';
+            const stackDesc = parts[1]?.trim() || '';
+            const isSelected = currentStack.id === stack.id;
+
+            // Extract concise scale label (e.g. Startup, Growing SME, Enterprise)
+            let scaleBadge = 'Startup';
+            if (stackCode.includes('B')) scaleBadge = 'Growing SME';
+            if (stackCode.includes('C')) scaleBadge = 'Enterprise';
+
+            return (
               <button
                 key={stack.id}
                 onClick={() => setSelectedStackId(stack.id)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md whitespace-nowrap transition-all ${
-                  selectedStackId === stack.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                className={`p-3 rounded-lg text-left transition-all cursor-pointer border ${
+                  isSelected
+                    ? 'bg-white border-indigo-300 shadow-sm ring-1 ring-indigo-400/30'
+                    : 'bg-white/60 border-transparent hover:bg-white hover:border-slate-300 text-slate-700'
                 }`}
               >
-                {stack.name.split('—')[0].trim()}
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className={`text-xs font-black uppercase tracking-wider ${isSelected ? 'text-indigo-700' : 'text-slate-900'}`}>
+                    {stackCode}
+                  </span>
+                  <span className={`text-3xs font-bold px-1.5 py-0.5 rounded ${
+                    isSelected ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200/80 text-slate-600'
+                  }`}>
+                    {scaleBadge}
+                  </span>
+                </div>
+                <div className="text-xs font-bold text-slate-800 line-clamp-1">
+                  {stackDesc || stack.targetOrg}
+                </div>
+                <div className="text-2xs text-slate-500 mt-0.5 line-clamp-1">
+                  {stack.recommendedChain.length} chained frameworks
+                </div>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         {/* Selected Stack Card */}

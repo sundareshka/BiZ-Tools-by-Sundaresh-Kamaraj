@@ -444,7 +444,7 @@ export const RISK_TOOLS_DATA: ToolDefinition[] = [
     ],
     quiz: [
       {
-        id: 'dt-1',
+        id: 'decisiontree-1',
         question: 'In standard decision tree notation, what do square (□) and circle (○) nodes represent respectively?',
         options: [
           'Square represents a chance outcome; circle represents a decision choice.',
@@ -456,7 +456,7 @@ export const RISK_TOOLS_DATA: ToolDefinition[] = [
         explanation: 'In decision analysis convention, squares (□) denote decision nodes where the manager makes a conscious choice, circles (○) denote chance nodes where nature/uncertainty determines the outcome, and triangles (△) represent terminal payoffs.'
       },
       {
-        id: 'dt-2',
+        id: 'decisiontree-2',
         question: 'Option X pays ₹100 Lakh with probability 0.60 and ₹20 Lakh with probability 0.40. What is its Expected Monetary Value (EMV)?',
         options: [
           '₹60 Lakh',
@@ -468,7 +468,7 @@ export const RISK_TOOLS_DATA: ToolDefinition[] = [
         explanation: 'EMV = (0.60 × ₹100 Lakh) + (0.40 × ₹20 Lakh) = ₹60 Lakh + ₹8 Lakh = ₹68 Lakh.'
       },
       {
-        id: 'dt-3',
+        id: 'decisiontree-3',
         question: 'What is meant by "rolling back" (backward induction) a decision tree?',
         options: [
           'Redrawing the diagram from scratch when assumptions change.',
@@ -480,7 +480,7 @@ export const RISK_TOOLS_DATA: ToolDefinition[] = [
         explanation: 'Rolling back is the standard solution algorithm: you start at the terminal payoffs on the far right, calculate expected values for chance nodes, select the highest value branch at decision nodes, and propagate the values back to the root.'
       },
       {
-        id: 'dt-4',
+        id: 'decisiontree-4',
         question: 'What does the Expected Value of Perfect Information (EVPI) indicate to an executive?',
         options: [
           'The historical cost of internal accounting reports.',
@@ -492,7 +492,7 @@ export const RISK_TOOLS_DATA: ToolDefinition[] = [
         explanation: 'EVPI calculates how much better your payoff would be if you had perfect advance knowledge of chance events. It establishes the absolute upper economic ceiling for spending on pilots, feasibility surveys, or due diligence.'
       },
       {
-        id: 'dt-5',
+        id: 'decisiontree-5',
         question: 'Why might a rational CEO reject an investment option that possesses the highest mathematical EMV?',
         options: [
           'Because the probabilities at chance nodes do not sum to 1.0.',

@@ -252,7 +252,7 @@ export function TrainingQuizModule() {
           const isCorrect = userAns === item.q.correctAnswer;
 
           return (
-            <div key={item.q.id} className="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
+            <div key={`${item.toolId}-${item.q.id}`} className="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
               <div className="flex items-start justify-between gap-3 pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <span className="text-2xs font-mono font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded">
