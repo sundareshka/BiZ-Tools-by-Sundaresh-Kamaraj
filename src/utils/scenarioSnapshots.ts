@@ -78,3 +78,87 @@ export function getSnapshotsForTool(toolId: string): ScenarioSnapshot[] {
   const all = loadAllSnapshots();
   return all.filter(s => s.toolId === toolId);
 }
+
+export function exportAllSnapshotsJSON(): void {
+  const all = loadAllSnapshots();
+  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(all, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute('href', dataStr);
+  downloadAnchor.setAttribute('download', `biztools-scenario-snapshots-${new Date().toISOString().slice(0, 10)}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+export function importSnapshotsJSON(jsonString: string): { importedCount: number; error?: string } {
+  try {
+    const parsed = JSON.parse(jsonString);
+    if (!Array.isArray(parsed)) {
+      return { importedCount: 0, error: 'Invalid JSON format: expected an array of snapshots' };
+    }
+    const current = loadAllSnapshots();
+    const existingIds = new Set(current.map(s => s.id));
+    const newItems: ScenarioSnapshot[] = [];
+
+    for (const item of parsed) {
+      if (item && item.toolId && item.name) {
+        if (!existingIds.has(item.id)) {
+          newItems.push(item);
+          existingIds.add(item.id);
+        } else {
+          // generate new ID to avoid clash
+          newItems.push({
+            ...item,
+            id: `snap-${item.toolId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+          });
+        }
+      }
+    }
+
+    const merged = [...newItems, ...current];
+    saveAllSnapshots(merged);
+    return { importedCount: newItems.length };
+  } catch (err: any) {
+    return { importedCount: 0, error: err?.message || 'Failed to parse JSON file' };
+  }
+}
+
+export function encodeSnapshotToURL(snapshot: ScenarioSnapshot): string {
+  try {
+    const compact = {
+      t: snapshot.toolId,
+      n: snapshot.name,
+      m: snapshot.notes,
+      d: snapshot.dataSummary,
+      p: snapshot.presetType
+    };
+    const b64 = btoa(encodeURIComponent(JSON.stringify(compact)));
+    const url = new URL(window.location.href);
+    url.hash = `scenario=${b64}`;
+    return url.toString();
+  } catch (err) {
+    console.error('Failed to encode snapshot to URL', err);
+    return window.location.href;
+  }
+}
+
+export function decodeSnapshotFromURL(): Partial<ScenarioSnapshot> | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const hash = window.location.hash;
+    const match = hash.match(/scenario=([^&]+)/);
+    if (!match) return null;
+    const jsonStr = decodeURIComponent(atob(match[1]));
+    const parsed = JSON.parse(jsonStr);
+    return {
+      toolId: parsed.t,
+      name: parsed.n,
+      notes: parsed.m,
+      dataSummary: parsed.d,
+      presetType: parsed.p
+    };
+  } catch (err) {
+    console.error('Failed to parse scenario from URL hash', err);
+    return null;
+  }
+}

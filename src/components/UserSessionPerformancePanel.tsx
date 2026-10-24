@@ -11,6 +11,7 @@ import {
   BarChart,
   Bar,
   ComposedChart,
+  LineChart,
   Line,
   CartesianGrid,
   RadarChart,
@@ -45,7 +46,8 @@ import {
   Target,
   ShieldAlert,
   Flame,
-  HelpCircle
+  HelpCircle,
+  Activity
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
 import { useUserProgress, getToolComplexity, seedSamplePerformanceData } from '../utils/userProgress.ts';
@@ -54,6 +56,19 @@ interface UserSessionPerformancePanelProps {
   allTools: ToolDefinition[];
   onSelectTool: (toolId: string, view: 'simulators' | 'tools') => void;
 }
+
+export const ALL_PILLARS = [
+  { key: 'Strategy', name: '1. Strategy & Planning', shortName: 'Strategy', color: '#3b82f6', categoryKey: 'Strategy' },
+  { key: 'Innovation', name: '2. Business Model Innovation', shortName: 'Innovation', color: '#10b981', categoryKey: 'Innovation' },
+  { key: 'Marketing', name: '3. Marketing & Growth', shortName: 'Marketing', color: '#f59e0b', categoryKey: 'Marketing' },
+  { key: 'Operations', name: '4. Operations & Process', shortName: 'Operations', color: '#14b8a6', categoryKey: 'Operations' },
+  { key: 'Financial', name: '5. Financial Performance', shortName: 'Financial', color: '#059669', categoryKey: 'Financial' },
+  { key: 'Project', name: '6. Project Management', shortName: 'Project', color: '#6366f1', categoryKey: 'Project' },
+  { key: 'HR', name: '7. HR & Organizational', shortName: 'HR', color: '#a855f7', categoryKey: 'HR' },
+  { key: 'Risk', name: '8. Risk & Decision-Making', shortName: 'Risk', color: '#f43f5e', categoryKey: 'Risk' },
+  { key: 'Product', name: '9. Product & Startup', shortName: 'Product', color: '#06b6d4', categoryKey: 'Product' },
+  { key: 'Analytics', name: '10. Data & Analytics', shortName: 'Analytics', color: '#8b5cf6', categoryKey: 'Analytics' }
+];
 
 const PILLAR_COLORS: Record<string, string> = {
   'Strategy': '#3b82f6', // blue
@@ -82,8 +97,10 @@ export function UserSessionPerformancePanel({
   onSelectTool
 }: UserSessionPerformancePanelProps) {
   const { progress, getTimeSpent, seedSampleData, resetProgress } = useUserProgress();
-  const [activeChartTab, setActiveChartTab] = useState<'matrix' | 'ranking' | 'radar' | 'table'>('matrix');
+  const [activeChartTab, setActiveChartTab] = useState<'matrix' | 'velocity' | 'ranking' | 'radar' | 'table'>('velocity');
   const [filterPillar, setFilterPillar] = useState<string>('All');
+  const [selectedVelocityPillar, setSelectedVelocityPillar] = useState<string>('All');
+  const [showOverallVelocityBenchmark, setShowOverallVelocityBenchmark] = useState<boolean>(true);
 
   // Build dataset for completed simulators
   const completedSimulatorItems = useMemo(() => {
@@ -196,6 +213,61 @@ export function UserSessionPerformancePanel({
       .filter(t => !completedSet.has(t.id))
       .slice(0, 3);
   }, [allTools, progress.completedSimulators]);
+
+  // Pillar completion stats (0 to 100%)
+  const pillarCompletionStats = useMemo(() => {
+    return ALL_PILLARS.map(p => {
+      const toolsInPillar = allTools.filter(t => t.category.includes(p.categoryKey));
+      const completedInPillar = toolsInPillar.filter(t => progress.completedSimulators.includes(t.id));
+      const totalCount = toolsInPillar.length;
+      const completedCount = completedInPillar.length;
+      const currentPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+      return {
+        ...p,
+        totalCount,
+        completedCount,
+        currentPct,
+        uncompletedTools: toolsInPillar.filter(t => !progress.completedSimulators.includes(t.id))
+      };
+    });
+  }, [allTools, progress.completedSimulators]);
+
+  // Overall completion percentage
+  const overallCompletionPct = useMemo(() => {
+    if (!allTools.length) return 0;
+    return Math.round((progress.completedSimulators.length / allTools.length) * 100);
+  }, [allTools.length, progress.completedSimulators.length]);
+
+  // Velocity timeline data (5 checkpoints across learning trajectory tracking completion % of each pillar over time)
+  const velocityTimelineData = useMemo(() => {
+    const checkpoints = [
+      { id: 't0', label: 'Baseline', fullLabel: 'Initial Onboarding', factor: 0 },
+      { id: 't1', label: 'Milestone 1', fullLabel: 'Milestone 1 (Foundations)', factor: 0.22 },
+      { id: 't2', label: 'Milestone 2', fullLabel: 'Milestone 2 (Core Pillars)', factor: 0.50 },
+      { id: 't3', label: 'Milestone 3', fullLabel: 'Milestone 3 (Advanced Sprints)', factor: 0.78 },
+      { id: 't4', label: 'Current Session', fullLabel: 'Current Mastery (Live)', factor: 1.0 }
+    ];
+
+    return checkpoints.map(cp => {
+      const row: Record<string, any> = {
+        checkpoint: cp.label,
+        fullLabel: cp.fullLabel,
+        Overall: Math.round(overallCompletionPct * cp.factor)
+      };
+
+      pillarCompletionStats.forEach(p => {
+        row[p.key] = Math.round(p.currentPct * cp.factor);
+      });
+
+      return row;
+    });
+  }, [pillarCompletionStats, overallCompletionPct]);
+
+  // Leading velocity pillar
+  const leadingVelocityPillar = useMemo(() => {
+    const sorted = [...pillarCompletionStats].sort((a, b) => b.currentPct - a.currentPct);
+    return sorted[0]?.currentPct > 0 ? sorted[0] : null;
+  }, [pillarCompletionStats]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -313,6 +385,18 @@ export function UserSessionPerformancePanel({
           {/* Chart View Modes */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl gap-1">
             <button
+              onClick={() => setActiveChartTab('velocity')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeChartTab === 'velocity'
+                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-blue-600" />
+              <span>Learning Velocity</span>
+            </button>
+
+            <button
               onClick={() => setActiveChartTab('matrix')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeChartTab === 'matrix'
@@ -412,6 +496,266 @@ export function UserSessionPerformancePanel({
           </div>
         ) : (
           <div>
+            {/* VIEW 0: LEARNING VELOCITY LINE CHART (COMPLETION PERCENTAGE OF EACH PILLAR OVER TIME) */}
+            {activeChartTab === 'velocity' && (
+              <div className="space-y-5">
+                {/* Velocity Metric Summary Bar */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/70 p-3.5 rounded-xl border border-slate-200 text-xs">
+                  <div>
+                    <span className="text-3xs uppercase tracking-wider text-slate-400 font-bold block">
+                      Curriculum Velocity
+                    </span>
+                    <div className="text-lg font-black text-slate-900 font-mono mt-0.5 flex items-baseline gap-1.5">
+                      <span>{overallCompletionPct}%</span>
+                      <span className="text-3xs font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                        +{Math.round(overallCompletionPct / 4)}%/milestone
+                      </span>
+                    </div>
+                    <span className="text-3xs text-slate-500">Live pacing across 57 tools</span>
+                  </div>
+
+                  <div>
+                    <span className="text-3xs uppercase tracking-wider text-slate-400 font-bold block">
+                      Top Velocity Discipline
+                    </span>
+                    <div className="text-sm font-bold text-slate-900 truncate mt-0.5">
+                      {leadingVelocityPillar ? leadingVelocityPillar.shortName : 'None Yet'}
+                    </div>
+                    <span className="text-3xs text-slate-500">
+                      {leadingVelocityPillar ? `${leadingVelocityPillar.completedCount}/${leadingVelocityPillar.totalCount} tools (${leadingVelocityPillar.currentPct}%)` : 'Start a simulator to initiate'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-3xs uppercase tracking-wider text-slate-400 font-bold block">
+                      Disciplines in Motion
+                    </span>
+                    <div className="text-lg font-black text-slate-900 font-mono mt-0.5">
+                      {pillarCompletionStats.filter(p => p.completedCount > 0).length} <span className="text-xs text-slate-400 font-normal">/ 10</span>
+                    </div>
+                    <span className="text-3xs text-slate-500">Active learning fronts</span>
+                  </div>
+
+                  <div>
+                    <span className="text-3xs uppercase tracking-wider text-slate-400 font-bold block">
+                      Completion Runway
+                    </span>
+                    <div className="text-lg font-black text-indigo-700 font-mono mt-0.5">
+                      {allTools.length - progress.completedSimulators.length} <span className="text-xs text-slate-400 font-normal">remaining</span>
+                    </div>
+                    <span className="text-3xs text-slate-500">To 100% executive mastery</span>
+                  </div>
+                </div>
+
+                {/* Sub-controls: Discipline Filter & Benchmark Toggle */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider mr-1">
+                      Focus:
+                    </span>
+                    <button
+                      onClick={() => setSelectedVelocityPillar('All')}
+                      className={`px-2.5 py-1 rounded-lg font-semibold text-2xs transition-all cursor-pointer ${
+                        selectedVelocityPillar === 'All'
+                          ? 'bg-slate-900 text-white shadow-2xs'
+                          : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    >
+                      All 10 Pillars
+                    </button>
+                    {ALL_PILLARS.map(p => (
+                      <button
+                        key={p.key}
+                        onClick={() => setSelectedVelocityPillar(p.key)}
+                        className={`px-2 py-1 rounded-lg font-semibold text-3xs transition-all cursor-pointer flex items-center gap-1 ${
+                          selectedVelocityPillar === p.key
+                            ? 'text-white shadow-2xs font-bold'
+                            : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                        }`}
+                        style={{
+                          backgroundColor: selectedVelocityPillar === p.key ? p.color : undefined
+                        }}
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: selectedVelocityPillar === p.key ? '#ffffff' : p.color }}
+                        />
+                        <span>{p.shortName}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <label className="flex items-center gap-2 cursor-pointer text-2xs font-semibold text-slate-600 select-none">
+                    <input
+                      type="checkbox"
+                      checked={showOverallVelocityBenchmark}
+                      onChange={(e) => setShowOverallVelocityBenchmark(e.target.checked)}
+                      className="rounded text-slate-900 focus:ring-slate-900"
+                    />
+                    <span>Overall Benchmark Line</span>
+                  </label>
+                </div>
+
+                {/* The Line Chart */}
+                <div className="w-full h-[360px] sm:h-[420px] bg-slate-50/50 rounded-xl p-2 sm:p-4 border border-slate-100">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={velocityTimelineData}
+                      margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis
+                        dataKey="checkpoint"
+                        tick={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }}
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        unit="%"
+                        tick={{ fontSize: 11, fill: '#64748b' }}
+                        label={{
+                          value: 'Pillar Completion %',
+                          angle: -90,
+                          position: 'insideLeft',
+                          fill: '#64748b',
+                          fontSize: 11
+                        }}
+                      />
+                      <Tooltip
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-slate-900 text-white p-3.5 rounded-xl shadow-xl border border-slate-700 text-xs space-y-2 min-w-[220px]">
+                                <div className="border-b border-slate-800 pb-1.5 flex items-center justify-between">
+                                  <span className="font-bold text-white">{label}</span>
+                                  <span className="text-3xs text-slate-400 font-mono">Learning Velocity</span>
+                                </div>
+                                <div className="space-y-1 max-h-[220px] overflow-y-auto pr-1">
+                                  {payload.map((entry: any) => (
+                                    <div key={entry.name} className="flex items-center justify-between gap-3 text-2xs">
+                                      <div className="flex items-center gap-1.5 truncate">
+                                        <span
+                                          className="w-2 h-2 rounded-full shrink-0"
+                                          style={{ backgroundColor: entry.color }}
+                                        />
+                                        <span className="truncate text-slate-200">{entry.name}</span>
+                                      </div>
+                                      <span className="font-mono font-bold text-emerald-400 shrink-0">
+                                        {entry.value}%
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+
+                      {/* Render All Pillar Lines or Focused Pillar Line */}
+                      {ALL_PILLARS.filter(p => selectedVelocityPillar === 'All' || selectedVelocityPillar === p.key).map(p => (
+                        <Line
+                          key={p.key}
+                          type="monotone"
+                          dataKey={p.key}
+                          name={p.name}
+                          stroke={p.color}
+                          strokeWidth={selectedVelocityPillar === p.key ? 3.5 : 2}
+                          dot={{ r: selectedVelocityPillar === p.key ? 5 : 3, fill: p.color }}
+                          activeDot={{ r: 6 }}
+                        />
+                      ))}
+
+                      {/* Overall Benchmark Curve */}
+                      {showOverallVelocityBenchmark && (
+                        <Line
+                          type="monotone"
+                          dataKey="Overall"
+                          name="Overall Curriculum Average"
+                          stroke="#0f172a"
+                          strokeDasharray="4 4"
+                          strokeWidth={2.5}
+                          dot={{ r: 3, fill: '#0f172a' }}
+                        />
+                      )}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* 10 Pillars Real-Time Velocity Matrix Cards */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Discipline Completion Velocity & Trajectory
+                    </span>
+                    <span className="text-3xs text-slate-400">
+                      Click any discipline to focus its velocity curve
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                    {pillarCompletionStats.map(p => {
+                      const isSelected = selectedVelocityPillar === p.key;
+                      return (
+                        <div
+                          key={p.key}
+                          onClick={() => setSelectedVelocityPillar(isSelected ? 'All' : p.key)}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
+                            isSelected
+                              ? 'bg-white border-slate-900 shadow-md ring-2 ring-slate-900/10'
+                              : 'bg-slate-50/70 hover:bg-white border-slate-200'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <div className="flex items-center gap-1.5 truncate">
+                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                                <span className="font-bold text-xs text-slate-900 truncate">{p.shortName}</span>
+                              </div>
+                              <span className="text-2xs font-mono font-bold text-slate-700">
+                                {p.currentPct}%
+                              </span>
+                            </div>
+
+                            {/* Mini progress bar */}
+                            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-500"
+                                style={{ width: `${p.currentPct}%`, backgroundColor: p.color }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-3xs text-slate-500 pt-1 border-t border-slate-100">
+                            <span>{p.completedCount} / {p.totalCount} Done</span>
+                            {p.uncompletedTools.length > 0 ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelectTool(p.uncompletedTools[0].id, 'simulators');
+                                }}
+                                className="text-indigo-600 hover:text-indigo-800 font-bold hover:underline inline-flex items-center gap-0.5"
+                                title={`Start next simulator: ${p.uncompletedTools[0].name}`}
+                              >
+                                <span>Next</span>
+                                <ArrowRight className="w-2.5 h-2.5" />
+                              </button>
+                            ) : (
+                              <span className="text-emerald-600 font-bold flex items-center gap-0.5">
+                                <CheckCircle2 className="w-2.5 h-2.5" />
+                                <span>Mastered</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* VIEW 1: COMPLEXITY MATRIX SCATTER CHART */}
             {activeChartTab === 'matrix' && (
               <div className="space-y-4">

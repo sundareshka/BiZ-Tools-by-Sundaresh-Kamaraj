@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Camera,
@@ -11,7 +11,10 @@ import {
   Clock,
   Sparkles,
   ArrowRight,
-  Plus
+  Plus,
+  Share2,
+  Download,
+  Upload
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
 import {
@@ -19,7 +22,10 @@ import {
   loadAllSnapshots,
   createScenarioSnapshot,
   deleteScenarioSnapshot,
-  getSnapshotsForTool
+  getSnapshotsForTool,
+  exportAllSnapshotsJSON,
+  importSnapshotsJSON,
+  encodeSnapshotToURL
 } from '../utils/scenarioSnapshots.ts';
 
 interface ScenarioSnapshotModalProps {
@@ -85,6 +91,44 @@ export function ScenarioSnapshotModal({
     setSuccessToast(`Saved snapshot "${created.name}"!`);
     setActiveTab('vault');
     setTimeout(() => setSuccessToast(null), 2500);
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleShareUrl = (s: ScenarioSnapshot) => {
+    const url = encodeSnapshotToURL(s);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setSuccessToast(`Scenario link copied to clipboard!`);
+      setTimeout(() => setSuccessToast(null), 2500);
+    }
+  };
+
+  const handleExportAll = () => {
+    exportAllSnapshotsJSON();
+    setSuccessToast(`Exported all scenarios to JSON file!`);
+    setTimeout(() => setSuccessToast(null), 2500);
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        const result = importSnapshotsJSON(content);
+        if (result.error) {
+          setSuccessToast(`Import error: ${result.error}`);
+        } else {
+          setSnapshots(getSnapshotsForTool(tool.id));
+          setSuccessToast(`Successfully imported ${result.importedCount} scenarios!`);
+        }
+        setTimeout(() => setSuccessToast(null), 3000);
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -169,6 +213,36 @@ export function ScenarioSnapshotModal({
           {/* TAB 1: SAVED SNAPSHOTS */}
           {activeTab === 'vault' && (
             <div className="space-y-3">
+              {/* Global Import/Export Bar */}
+              <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-2xs">
+                <span className="text-slate-500 font-medium">Backup & Sharing:</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportFile}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-2 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-md text-slate-700 font-semibold transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                    title="Import scenarios from JSON"
+                  >
+                    <Upload className="w-3 h-3 text-slate-500" />
+                    <span>Import JSON</span>
+                  </button>
+                  <button
+                    onClick={handleExportAll}
+                    className="px-2 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-md text-slate-700 font-semibold transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                    title="Export all scenarios to JSON"
+                  >
+                    <Download className="w-3 h-3 text-slate-500" />
+                    <span>Export JSON</span>
+                  </button>
+                </div>
+              </div>
+
               {snapshots.length === 0 ? (
                 <div className="text-center py-10 px-4 border border-dashed border-slate-200 rounded-xl space-y-3 bg-slate-50/50">
                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
@@ -210,6 +284,15 @@ export function ScenarioSnapshotModal({
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => handleShareUrl(s)}
+                          className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                          title="Generate shareable URL link for this scenario"
+                        >
+                          <Share2 className="w-3 h-3 text-slate-500" />
+                          <span className="hidden sm:inline">Share</span>
+                        </button>
+
                         <button
                           onClick={() => {
                             onApplySnapshot(s);

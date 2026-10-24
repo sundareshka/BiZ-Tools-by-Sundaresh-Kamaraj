@@ -112,9 +112,14 @@ import { SimulatorPresetToolbar } from './components/SimulatorPresetToolbar.tsx'
 import { ScenarioSnapshotModal } from './components/ScenarioSnapshotModal.tsx';
 import { ExecutiveStrategyDossierModal } from './components/ExecutiveStrategyDossierModal.tsx';
 import { StrategyChainRunnerModal } from './components/StrategyChainRunnerModal.tsx';
-import { getSnapshotsForTool, ScenarioSnapshot } from './utils/scenarioSnapshots.ts';
+import { StrategyDeckSlideBuilderModal } from './components/StrategyDeckSlideBuilderModal.tsx';
+import { MultiFrameworkWorkbenchModal } from './components/MultiFrameworkWorkbenchModal.tsx';
+import { ExecutiveAchievementsModal } from './components/ExecutiveAchievementsModal.tsx';
+import { getSnapshotsForTool, ScenarioSnapshot, decodeSnapshotFromURL } from './utils/scenarioSnapshots.ts';
+import { loadDeckSlides, saveDeckSlide } from './utils/slideDeck.ts';
 import { TOOL_ICONS, getToolIcon } from './data/toolIcons.ts';
 import { useUserProgress, setSimulatorComplete, addSimulatorTimeSpent, saveUserProgress, loadUserProgress } from './utils/userProgress.ts';
+import { triggerCompletionConfetti } from './utils/confetti.ts';
 import {
   Home,
   Download,
@@ -152,7 +157,10 @@ import {
   Award,
   Keyboard,
   Camera,
-  Printer
+  Printer,
+  Presentation,
+  SplitSquareVertical,
+  Gamepad2
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -246,6 +254,12 @@ export default function App() {
   const [isDossierModalOpen, setIsDossierModalOpen] = useState<boolean>(false);
   const [isChainRunnerOpen, setIsChainRunnerOpen] = useState<boolean>(false);
   const [snapshotCount, setSnapshotCount] = useState<number>(0);
+  const [isDeckBuilderOpen, setIsDeckBuilderOpen] = useState<boolean>(false);
+  const [isWorkbenchOpen, setIsWorkbenchOpen] = useState<boolean>(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState<boolean>(false);
+  const [deckSlideCount, setDeckSlideCount] = useState<number>(() => {
+    return typeof window !== 'undefined' ? loadDeckSlides().length : 2;
+  });
 
   const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
   const currentIndex = ALL_TOOLS.findIndex(t => t.id === selectedToolId);
@@ -254,6 +268,16 @@ export default function App() {
     setSnapshotCount(getSnapshotsForTool(selectedToolId).length);
     setActivePresetId(null);
   }, [selectedToolId]);
+
+  // Detect shared scenario from URL hash on initial load
+  useEffect(() => {
+    const shared = decodeSnapshotFromURL();
+    if (shared && shared.toolId) {
+      handleSelectTool(shared.toolId);
+      setAppliedTemplateToast(`Loaded shared scenario: "${shared.name}"`);
+      setTimeout(() => setAppliedTemplateToast(null), 4000);
+    }
+  }, []);
 
   const handleSelectPreset = (presetId: string, presetName: string, _inputs: { label: string; value: string }[]) => {
     setActivePresetId(presetId);
@@ -269,6 +293,30 @@ export default function App() {
 
   const handleApplySnapshot = (snapshot: ScenarioSnapshot) => {
     setAppliedTemplateToast(`Restored snapshot "${snapshot.name}" into ${currentTool.shortName}!`);
+    setTimeout(() => setAppliedTemplateToast(null), 3000);
+  };
+
+  const handleAddCurrentToDeck = () => {
+    saveDeckSlide({
+      toolId: currentTool.id,
+      toolName: currentTool.name,
+      pillar: currentTool.category,
+      title: `${currentTool.name} Strategic Diagnostic`,
+      executiveSummary: currentTool.corePurpose,
+      keyMetrics: [
+        { label: 'Planning Horizon', value: currentTool.horizon },
+        { label: 'Scope', value: currentTool.scope },
+        { label: 'Time to First Result', value: currentTool.timeToResult }
+      ],
+      strategicRecommendations: [
+        `Establish operational baseline using ${currentTool.shortName} mechanics`,
+        `Stress-test critical resource assumptions against competitive shifts`,
+        `Review quarterly alignment milestones with executive steering committee`
+      ],
+      notes: `Captured from active ${currentTool.name} session.`
+    });
+    setDeckSlideCount(loadDeckSlides().length);
+    setAppliedTemplateToast(`Captured slide for ${currentTool.shortName} into Board Deck!`);
     setTimeout(() => setAppliedTemplateToast(null), 3000);
   };
 
@@ -820,14 +868,50 @@ export default function App() {
               {/* PWA Install Trigger */}
               <PWAInstallButton />
 
-              {/* Strategy Chain Runner Workshop */}
+              {/* Board Deck Presentation Builder */}
+              <button
+                onClick={() => {
+                  setDeckSlideCount(loadDeckSlides().length);
+                  setIsDeckBuilderOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Board Deck Slide Presentation Builder (16:9 Widescreen)"
+              >
+                <Presentation className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+                <span className="hidden xl:inline font-medium">Board Deck</span>
+                <span className="text-3xs font-mono font-bold bg-indigo-800 text-indigo-200 px-1.5 py-0.2 rounded-full">
+                  {deckSlideCount}
+                </span>
+              </button>
+
+              {/* Multi-Framework Strategy Workbench (Dual Studio) */}
+              <button
+                onClick={() => setIsWorkbenchOpen(true)}
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Launch Multi-Framework Dual Studio Workbench"
+              >
+                <SplitSquareVertical className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                <span className="hidden 2xl:inline font-medium">Dual Studio</span>
+              </button>
+
+              {/* Executive Crisis Campaigns & Wargame */}
               <button
                 onClick={() => setIsChainRunnerOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Launch Multi-Tool Strategic Chain Workshop"
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Launch Executive Crisis Campaigns & Strategic Wargame"
               >
-                <Compass className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                <span className="hidden 2xl:inline font-medium">Workshop</span>
+                <Gamepad2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="hidden 2xl:inline font-medium">Wargames</span>
+              </button>
+
+              {/* Executive Milestone Credentials & Badges */}
+              <button
+                onClick={() => setIsAchievementsOpen(true)}
+                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Executive Milestone Credentials & Badges"
+              >
+                <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="hidden 2xl:inline font-medium">Badges</span>
               </button>
 
               {/* Executive Strategy Dossier PDF Binder */}
@@ -1049,7 +1133,18 @@ export default function App() {
 
                 {/* Direct Progress Completion Toggle right beside Sim/Guide */}
                 <button
-                  onClick={() => toggleSimulator(selectedToolId)}
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const originX = (rect.left + rect.width / 2) / window.innerWidth;
+                    const originY = (rect.top + rect.height / 2) / window.innerHeight;
+                    const wasDone = isSimulatorDone(selectedToolId);
+                    toggleSimulator(selectedToolId);
+                    if (!wasDone) {
+                      triggerCompletionConfetti({ x: originX, y: originY });
+                      setAppliedTemplateToast(`🎉 ${currentTool.name} marked completed!`);
+                      setTimeout(() => setAppliedTemplateToast(null), 3000);
+                    }
+                  }}
                   className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border ${
                     isSimulatorDone(selectedToolId)
                       ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs font-bold ring-1 ring-emerald-400/40'
@@ -1079,6 +1174,16 @@ export default function App() {
                 >
                   <Printer className="w-3.5 h-3.5 text-indigo-600 shrink-0 group-hover:scale-110 transition-transform duration-200" />
                   <span className="hidden sm:inline">Export PDF</span>
+                </button>
+
+                {/* Add to Board Deck Button */}
+                <button
+                  onClick={handleAddCurrentToDeck}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-900 shadow-2xs"
+                  title="Capture this framework snapshot into Board Deck Builder"
+                >
+                  <Presentation className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span className="hidden sm:inline">Add to Deck</span>
                 </button>
               </div>
             </div>
@@ -2273,6 +2378,38 @@ export default function App() {
           setActiveMainTab('simulators');
         }}
         isSimulatorDone={isSimulatorDone}
+      />
+
+      {/* Board Deck Presentation Builder Modal (16:9 Widescreen) */}
+      <StrategyDeckSlideBuilderModal
+        isOpen={isDeckBuilderOpen}
+        onClose={() => setIsDeckBuilderOpen(false)}
+        onLaunchTool={(toolId) => {
+          handleSelectTool(toolId);
+          setActiveMainTab('simulators');
+        }}
+      />
+
+      {/* Multi-Framework Strategy Workbench Modal (Dual Studio) */}
+      <MultiFrameworkWorkbenchModal
+        isOpen={isWorkbenchOpen}
+        onClose={() => setIsWorkbenchOpen(false)}
+        allTools={ALL_TOOLS}
+        initialToolIdA={currentTool.id}
+        initialToolIdB={ALL_TOOLS.find(t => t.id !== currentTool.id)?.id || 'blueocean'}
+        onLaunchTool={(toolId) => {
+          handleSelectTool(toolId);
+          setActiveMainTab('simulators');
+        }}
+      />
+
+      {/* Executive Milestone Credentials & Badges Modal */}
+      <ExecutiveAchievementsModal
+        isOpen={isAchievementsOpen}
+        onClose={() => setIsAchievementsOpen(false)}
+        progress={progress}
+        allTools={ALL_TOOLS}
+        onOpenCertificate={() => setIsCertificateModalOpen(true)}
       />
 
       {/* Floating Toast Notification for 1-Click Applied Template */}

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useUserProgress } from '../utils/userProgress.ts';
 import { ToolDefinition } from '../data/toolsData.ts';
+import { triggerCompletionConfetti } from '../utils/confetti.ts';
 
 interface UserProgressIndicatorProps {
   allTools: ToolDefinition[];
@@ -286,7 +287,16 @@ export function UserProgressIndicator({
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => toggleSimulator(activeTool.id)}
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const originX = (rect.left + rect.width / 2) / window.innerWidth;
+                      const originY = (rect.top + rect.height / 2) / window.innerHeight;
+                      const wasDone = isSimulatorDone(activeTool.id);
+                      toggleSimulator(activeTool.id);
+                      if (!wasDone) {
+                        triggerCompletionConfetti({ x: originX, y: originY });
+                      }
+                    }}
                     className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
                       isSimulatorDone(activeTool.id)
                         ? 'bg-emerald-100 text-emerald-900 border-emerald-300 font-bold'
@@ -315,7 +325,10 @@ export function UserProgressIndicator({
             {/* Quick Bulk Actions */}
             <div className="flex items-center gap-2 text-2xs">
               <button
-                onClick={() => markAllSimulators(allTools.map(t => t.id))}
+                onClick={() => {
+                  markAllSimulators(allTools.map(t => t.id));
+                  triggerCompletionConfetti();
+                }}
                 className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 font-semibold transition-colors flex items-center justify-center gap-1"
                 title="Mark all 57 simulators completed"
               >
@@ -419,7 +432,14 @@ export function UserProgressIndicator({
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      const originX = (rect.left + rect.width / 2) / window.innerWidth;
+                                      const originY = (rect.top + rect.height / 2) / window.innerHeight;
+                                      const wasDone = isSimulatorDone(tool.id);
                                       toggleSimulator(tool.id);
+                                      if (!wasDone) {
+                                        triggerCompletionConfetti({ x: originX, y: originY });
+                                      }
                                     }}
                                     className="p-0.5 text-slate-600 hover:text-emerald-700 cursor-pointer"
                                     title={`Toggle ${tool.shortName} simulator`}
@@ -454,8 +474,14 @@ export function UserProgressIndicator({
                           {/* Quick Pillar Complete Button */}
                           <div className="pt-1.5 flex justify-end">
                             <button
-                              onClick={() => markPillar(p.tools.map(t => t.id), 'both')}
-                              className="text-3xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                              onClick={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const originX = (rect.left + rect.width / 2) / window.innerWidth;
+                                const originY = (rect.top + rect.height / 2) / window.innerHeight;
+                                markPillar(p.tools.map(t => t.id), 'both');
+                                triggerCompletionConfetti({ x: originX, y: originY });
+                              }}
+                              className="text-3xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
                             >
                               Mark All {p.name.split('.')[1] || p.name} Completed ✓
                             </button>

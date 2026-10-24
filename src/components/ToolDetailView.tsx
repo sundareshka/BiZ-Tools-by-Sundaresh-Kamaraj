@@ -3,6 +3,8 @@ import { ToolDefinition } from '../data/toolsData.ts';
 import { getToolIcon } from '../data/toolIcons.ts';
 import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, Clock, Layers, ArrowRight, Play, Sparkles, Download } from 'lucide-react';
 import { useUserProgress } from '../utils/userProgress.ts';
+import { triggerCompletionConfetti } from '../utils/confetti.ts';
+import { AudioBriefingPlayer } from './AudioBriefingPlayer.tsx';
 
 export function ToolDetailView({
   tool,
@@ -43,7 +45,16 @@ export function ToolDetailView({
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             <button
-              onClick={() => toggleSimulator(tool.id)}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const originX = (rect.left + rect.width / 2) / window.innerWidth;
+                const originY = (rect.top + rect.height / 2) / window.innerHeight;
+                const wasDone = isSimulatorDone(tool.id);
+                toggleSimulator(tool.id);
+                if (!wasDone) {
+                  triggerCompletionConfetti({ x: originX, y: originY });
+                }
+              }}
               className={`px-3 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 isSimulatorDone(tool.id)
                   ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold'
@@ -105,6 +116,9 @@ export function ToolDetailView({
           </div>
         </div>
       </div>
+
+      {/* 60-Second Audio Executive Briefing */}
+      <AudioBriefingPlayer tool={tool} />
 
       {/* Navigation Sub-Tabs */}
       <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200 w-fit">
