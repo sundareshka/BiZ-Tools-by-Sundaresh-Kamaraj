@@ -160,7 +160,9 @@ import {
   Printer,
   Presentation,
   SplitSquareVertical,
-  Gamepad2
+  Gamepad2,
+  Menu,
+  X
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -260,6 +262,11 @@ export default function App() {
   const [deckSlideCount, setDeckSlideCount] = useState<number>(() => {
     return typeof window !== 'undefined' ? loadDeckSlides().length : 2;
   });
+
+  // Clean Navigation States (Strict single-row structure)
+  const [isStudioMenuOpen, setIsStudioMenuOpen] = useState<boolean>(false);
+  const [isMoreNavOpen, setIsMoreNavOpen] = useState<boolean>(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
 
   const currentTool = ALL_TOOLS.find(t => t.id === selectedToolId) || ALL_TOOLS[0];
   const currentIndex = ALL_TOOLS.findIndex(t => t.id === selectedToolId);
@@ -609,6 +616,13 @@ export default function App() {
         return;
       }
 
+      // Close popover menus on Escape
+      if (e.key === 'Escape') {
+        setIsStudioMenuOpen(false);
+        setIsMoreNavOpen(false);
+        setIsMobileNavOpen(false);
+      }
+
       // Guard single-character hotkeys from firing inside form inputs
       if (isInput || e.metaKey || e.ctrlKey || e.altKey) return;
 
@@ -722,347 +736,612 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-slate-200 overflow-x-hidden w-full max-w-full">
-      {/* 1. Top Global Navigation Bar - Clean, Organized Executive Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs w-full overflow-x-clip">
-        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 2xl:px-8">
-          <div className="h-16 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4">
-            {/* Left: Brand Identity */}
-            <div
-              onClick={() => setActiveMainTab('home')}
-              className="flex items-center gap-2 sm:gap-2.5 shrink-0 cursor-pointer group"
-              title="Return to BizTools Home"
-            >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-xs shrink-0 group-hover:scale-105 group-hover:border-indigo-400 group-hover:shadow-sm transition-all flex items-center justify-center">
-                <img
-                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
-                  alt="BizTools by Sundaresh Kamaraj"
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="font-extrabold text-slate-900 group-hover:text-indigo-950 tracking-tight text-lg sm:text-xl leading-none font-display transition-colors">
-                    BizTools
-                  </h1>
-                  <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 tracking-wide font-mono hidden 2xl:inline-block">
-                    v1.21 · 57 Tools · 10 Pillars
-                  </span>
-                </div>
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1.5 text-2xs sm:text-xs text-slate-500 font-medium mt-0.5 sm:mt-1"
-                >
-                  <span>by</span>
-                  <a
-                    href="https://sundaresh.blog"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors hover:underline inline-flex items-center gap-0.5"
-                  >
-                    Sundaresh Kamaraj
-                    <ExternalLink className="w-2.5 h-2.5 opacity-70" />
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Center: Primary View Navigation Tabs (Clean segmented control for very wide screens) */}
-            <nav className="hidden 2xl:flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 text-xs font-semibold gap-0.5 shrink-0">
-              <button
+      {/* 1. Global Navigation Bar - Two-Row Architecture */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs w-full">
+        {/* ROW 1: Executive Brand & Utility Bar */}
+        <div className="w-full border-b border-slate-100 bg-white">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6">
+            <div className="h-14 sm:h-15 flex items-center justify-between gap-3 relative">
+              {/* Left: Brand Identity */}
+              <div
                 onClick={() => setActiveMainTab('home')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeMainTab === 'home'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
+                className="flex items-center gap-2 sm:gap-2.5 shrink-0 cursor-pointer group"
+                title="Return to BizTools Home"
               >
-                <Home className="w-3.5 h-3.5 text-slate-700" />
-                <span>Home</span>
-              </button>
-              <button
-                onClick={() => setActiveMainTab('simulators')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeMainTab === 'simulators'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
-              >
-                <PlayCircle className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Simulators</span>
-              </button>
-              <button
-                onClick={() => setActiveMainTab('tools')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  activeMainTab === 'tools'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-                <span>Guides</span>
-              </button>
-              <button
-                onClick={() => setActiveMainTab('scenarios')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  activeMainTab === 'scenarios'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
-              >
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-                <span>Missions</span>
-                <span className="text-3xs font-mono font-bold text-slate-400">44</span>
-              </button>
-              <button
-                onClick={() => setActiveMainTab('quizzes')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  activeMainTab === 'quizzes'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Quizzes</span>
-                <span className="text-3xs font-mono font-bold text-slate-400">285</span>
-              </button>
-              <button
-                onClick={() => setActiveMainTab('stacks')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  activeMainTab === 'stacks'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
-              >
-                <GitCompare className="w-3.5 h-3.5 text-purple-600" />
-                <span>Matrix</span>
-              </button>
-              <button
-                onClick={() => setActiveMainTab('glossary')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  activeMainTab === 'glossary'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5 text-slate-600" />
-                <span>Glossary</span>
-                <span className="text-3xs font-mono font-bold text-slate-400">350+</span>
-              </button>
-              <button
-                onClick={() => setActiveMainTab('performance')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeMainTab === 'performance'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                }`}
-                title="User Session Performance & Complexity Analysis"
-              >
-                <BrainCircuit className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Performance</span>
-              </button>
-            </nav>
-
-            {/* Right: Quick Search, Recommender, Workshop, Dossier, Workspace & Progress Hub */}
-            <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0">
-              {/* PWA Install Trigger */}
-              <PWAInstallButton />
-
-              {/* Board Deck Presentation Builder */}
-              <button
-                onClick={() => {
-                  setDeckSlideCount(loadDeckSlides().length);
-                  setIsDeckBuilderOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-indigo-900 hover:bg-indigo-800 text-white transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Board Deck Slide Presentation Builder (16:9 Widescreen)"
-              >
-                <Presentation className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
-                <span className="hidden xl:inline font-medium">Board Deck</span>
-                <span className="text-3xs font-mono font-bold bg-indigo-800 text-indigo-200 px-1.5 py-0.2 rounded-full">
-                  {deckSlideCount}
-                </span>
-              </button>
-
-              {/* Multi-Framework Strategy Workbench (Dual Studio) */}
-              <button
-                onClick={() => setIsWorkbenchOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Launch Multi-Framework Dual Studio Workbench"
-              >
-                <SplitSquareVertical className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                <span className="hidden 2xl:inline font-medium">Dual Studio</span>
-              </button>
-
-              {/* Executive Crisis Campaigns & Wargame */}
-              <button
-                onClick={() => setIsChainRunnerOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Launch Executive Crisis Campaigns & Strategic Wargame"
-              >
-                <Gamepad2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="hidden 2xl:inline font-medium">Wargames</span>
-              </button>
-
-              {/* Executive Milestone Credentials & Badges */}
-              <button
-                onClick={() => setIsAchievementsOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Executive Milestone Credentials & Badges"
-              >
-                <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span className="hidden 2xl:inline font-medium">Badges</span>
-              </button>
-
-              {/* Executive Strategy Dossier PDF Binder */}
-              <button
-                onClick={() => setIsDossierModalOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Compile Boardroom Briefing Dossier & PDF Binder"
-              >
-                <FileText className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
-                <span className="hidden 2xl:inline font-medium">Dossier</span>
-              </button>
-
-              {/* Framework Recommender Wizard */}
-              <button
-                onClick={() => setIsRecommenderOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Launch 3-Step Framework Recommender Wizard (Hotkey: R)"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span className="hidden 2xl:inline font-medium">Recommender</span>
-              </button>
-
-              {/* My Workspace Drawer Trigger */}
-              <button
-                onClick={() => setIsWorkspaceDrawerOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 2xl:px-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Open My Workspace Drawer (Hotkey: W)"
-              >
-                <Bookmark className="w-3.5 h-3.5 text-amber-500 fill-amber-100 shrink-0" />
-                <span className="hidden 2xl:inline">Workspace</span>
-                <span className="text-3xs font-mono font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-full">
-                  {progress.savedWorkspace?.length || 0}
-                </span>
-              </button>
-
-              {/* Keyboard Shortcuts Trigger */}
-              <button
-                onClick={() => setIsShortcutsOpen(true)}
-                className="hidden sm:flex p-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-2xs shrink-0"
-                title="Keyboard Shortcuts Cheatsheet (Hotkey: ?)"
-                aria-label="Keyboard Shortcuts"
-              >
-                <Keyboard className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Search Trigger */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/90 border border-slate-200/90 text-slate-500 hover:text-slate-800 text-xs px-2 sm:px-2.5 py-1.5 rounded-xl transition-all w-9 sm:w-28 md:w-32 lg:w-36 2xl:w-44 justify-center sm:justify-between group shadow-2xs shrink-0"
-                title="Search 57 frameworks (Cmd+K or /)"
-              >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-colors shrink-0" />
-                  <span className="hidden sm:inline truncate text-slate-600 font-medium text-xs">Search...</span>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden bg-white border border-slate-200/90 shadow-xs shrink-0 group-hover:scale-105 group-hover:border-indigo-400 group-hover:shadow-sm transition-all flex items-center justify-center">
+                  <img
+                    src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                    alt="BizTools by Sundaresh Kamaraj"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
-                <kbd className="hidden sm:inline-flex items-center text-3xs font-mono font-semibold bg-white border border-slate-300 text-slate-500 px-1.5 py-0.2 rounded shadow-2xs">
-                  ⌘K
-                </kbd>
-              </button>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <h1 className="font-extrabold text-slate-900 group-hover:text-indigo-950 tracking-tight text-lg sm:text-xl leading-none font-display transition-colors">
+                      BizTools
+                    </h1>
+                    <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 tracking-wide font-mono hidden md:inline-block">
+                      v1.21 · 57 Tools
+                    </span>
+                  </div>
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1.5 text-2xs sm:text-xs text-slate-500 font-medium mt-0.5 sm:mt-1"
+                  >
+                    <span>by</span>
+                    <a
+                      href="https://sundaresh.blog"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors hover:underline inline-flex items-center gap-0.5"
+                    >
+                      Sundaresh Kamaraj
+                      <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                    </a>
+                  </div>
+                </div>
+              </div>
 
-              {/* User Progress Indicator */}
-              <UserProgressIndicator
-                allTools={ALL_TOOLS}
-                currentToolId={selectedToolId}
-                onSelectTool={(toolId, view) => {
-                  handleSelectTool(toolId);
-                  setActiveMainTab(view);
-                }}
-                onOpenPerformance={() => setActiveMainTab('performance')}
-              />
+              {/* Right: Consolidated Executive Suite, Workspace, Search & Progress */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                {/* Search Trigger */}
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/90 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs px-2.5 py-1.5 rounded-xl transition-all shadow-2xs shrink-0 cursor-pointer"
+                  title="Search 57 frameworks (Cmd+K or /)"
+                >
+                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="hidden sm:inline text-xs font-medium">Search</span>
+                  <kbd className="hidden sm:inline-flex text-3xs font-mono font-semibold bg-white border border-slate-300 text-slate-500 px-1 py-0.2 rounded">
+                    ⌘K
+                  </kbd>
+                </button>
+
+                {/* Consolidated Executive Studio Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setIsStudioMenuOpen(prev => !prev);
+                      setIsMoreNavOpen(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs shrink-0 ${
+                      isStudioMenuOpen
+                        ? 'bg-indigo-900 text-white shadow-indigo-200'
+                        : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/80'
+                    }`}
+                    title="Executive Suite & Tools"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    <span className="font-semibold">Studio</span>
+                    {deckSlideCount > 0 && (
+                      <span className="text-3xs font-mono font-bold bg-indigo-700 text-white px-1.5 py-0.2 rounded-full">
+                        {deckSlideCount}
+                      </span>
+                    )}
+                    <ChevronDown className={`w-3 h-3 text-indigo-600 transition-transform ${isStudioMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isStudioMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-30"
+                        onClick={() => setIsStudioMenuOpen(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-40 animate-in fade-in zoom-in-95 duration-150">
+                        <div className="px-3 py-1.5 border-b border-slate-100 text-2xs font-bold uppercase tracking-wider text-slate-400">
+                          Executive Suite & Tools
+                        </div>
+                        <div className="py-1 space-y-0.5">
+                          {/* Board Deck Builder */}
+                          <button
+                            onClick={() => {
+                              setDeckSlideCount(loadDeckSlides().length);
+                              setIsDeckBuilderOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 group-hover:bg-indigo-100 transition-colors">
+                                <Presentation className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-slate-800">Board Deck Builder</div>
+                                <div className="text-2xs text-slate-500">16:9 Widescreen slide deck</div>
+                              </div>
+                            </div>
+                            <span className="text-3xs font-mono font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">
+                              {deckSlideCount} slides
+                            </span>
+                          </button>
+
+                          {/* Dual Studio Workbench */}
+                          <button
+                            onClick={() => {
+                              setIsWorkbenchOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors">
+                              <SplitSquareVertical className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-slate-800">Dual Studio Workbench</div>
+                              <div className="text-2xs text-slate-500">Side-by-side framework comparison</div>
+                            </div>
+                          </button>
+
+                          {/* Crisis Wargames */}
+                          <button
+                            onClick={() => {
+                              setIsChainRunnerOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                              <Gamepad2 className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-slate-800">Crisis Wargames</div>
+                              <div className="text-2xs text-slate-500">Strategic decision campaigns</div>
+                            </div>
+                          </button>
+
+                          {/* Strategy Dossier */}
+                          <button
+                            onClick={() => {
+                              setIsDossierModalOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 group-hover:bg-slate-200 transition-colors">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-slate-800">Executive Dossier</div>
+                              <div className="text-2xs text-slate-500">Boardroom binder & PDF export</div>
+                            </div>
+                          </button>
+
+                          {/* Milestone Badges */}
+                          <button
+                            onClick={() => {
+                              setIsAchievementsOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 group-hover:bg-amber-100 transition-colors">
+                              <Trophy className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-slate-800">Milestone Badges</div>
+                              <div className="text-2xs text-slate-500">Credentials & achievements</div>
+                            </div>
+                          </button>
+
+                          {/* Framework Wizard */}
+                          <button
+                            onClick={() => {
+                              setIsRecommenderOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                                <Sparkles className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-slate-800">Framework Wizard</div>
+                                <div className="text-2xs text-slate-500">3-step tool selector</div>
+                              </div>
+                            </div>
+                            <kbd className="text-3xs font-mono font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">
+                              R
+                            </kbd>
+                          </button>
+
+                          {/* Keyboard Shortcuts */}
+                          <button
+                            onClick={() => {
+                              setIsShortcutsOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-slate-100 transition-colors">
+                                <Keyboard className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-slate-800">Keyboard Shortcuts</div>
+                                <div className="text-2xs text-slate-500">Quick hotkey cheatsheet</div>
+                              </div>
+                            </div>
+                            <kbd className="text-3xs font-mono font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">
+                              ?
+                            </kbd>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* My Workspace Drawer Trigger */}
+                <button
+                  onClick={() => setIsWorkspaceDrawerOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
+                  title="Open My Workspace Drawer (Hotkey: W)"
+                >
+                  <Bookmark className="w-3.5 h-3.5 text-amber-500 fill-amber-100 shrink-0" />
+                  <span className="hidden sm:inline text-xs">Workspace</span>
+                  <span className="text-3xs font-mono font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-full">
+                    {progress.savedWorkspace?.length || 0}
+                  </span>
+                </button>
+
+                {/* User Progress Indicator */}
+                <UserProgressIndicator
+                  allTools={ALL_TOOLS}
+                  currentToolId={selectedToolId}
+                  onSelectTool={(toolId, view) => {
+                    handleSelectTool(toolId);
+                    setActiveMainTab(view);
+                  }}
+                  onOpenPerformance={() => setActiveMainTab('performance')}
+                />
+
+                {/* PWA Install Trigger */}
+                <PWAInstallButton />
+
+                {/* Responsive Mobile Menu Toggle */}
+                <button
+                  onClick={() => {
+                    setIsMobileNavOpen(prev => !prev);
+                    setIsStudioMenuOpen(false);
+                    setIsMoreNavOpen(false);
+                  }}
+                  className="lg:hidden p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+                  aria-label="Toggle navigation"
+                >
+                  {isMobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Secondary View Navigation (Clean horizontal strip for screens < 2xl) */}
-        <div className="2xl:hidden w-full border-t border-slate-100 bg-slate-50 py-2 px-4 overflow-x-auto flex justify-center">
-          <div className="flex items-center justify-center gap-1 min-w-max mx-auto text-xs font-semibold">
-            <button
-              onClick={() => setActiveMainTab('home')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === 'home' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <Home className="w-3.5 h-3.5 text-slate-400" />
-              <span>Home</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('simulators')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === 'simulators' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <PlayCircle className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Simulators</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('tools')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'tools' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-blue-500" />
-              <span>Guides</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('scenarios')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'scenarios' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-              <span>Missions (44)</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('quizzes')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'quizzes' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Quizzes (285)</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('stacks')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'stacks' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <GitCompare className="w-3.5 h-3.5 text-purple-500" />
-              <span>Matrix</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('glossary')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeMainTab === 'glossary' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5 text-slate-500" />
-              <span>Glossary</span>
-            </button>
-            <button
-              onClick={() => setActiveMainTab('performance')}
-              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === 'performance' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Performance</span>
-            </button>
+        {/* ROW 2: Primary Navigation Tab Bar - Dedicated horizontal bar so menu never overflows table */}
+        <div className="w-full bg-slate-50/95 border-t border-slate-100">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6">
+            <div className="flex items-center justify-between gap-3 py-1.5 overflow-x-auto no-scrollbar scroll-smooth">
+              <nav className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-max">
+                {/* 1. Home */}
+                <button
+                  onClick={() => setActiveMainTab('home')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'home'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <Home className={`w-3.5 h-3.5 ${activeMainTab === 'home' ? 'text-indigo-200' : 'text-slate-500'}`} />
+                  <span>Home</span>
+                </button>
+
+                {/* 2. Simulators */}
+                <button
+                  onClick={() => setActiveMainTab('simulators')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'simulators'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <PlayCircle className={`w-3.5 h-3.5 ${activeMainTab === 'simulators' ? 'text-emerald-300' : 'text-emerald-600'}`} />
+                  <span>Simulators</span>
+                  <span className={`text-3xs font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    activeMainTab === 'simulators' ? 'bg-indigo-800 text-indigo-100' : 'bg-emerald-100/80 text-emerald-800 border border-emerald-200/60'
+                  }`}>
+                    57
+                  </span>
+                </button>
+
+                {/* 3. Guides */}
+                <button
+                  onClick={() => setActiveMainTab('tools')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'tools'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <BookOpen className={`w-3.5 h-3.5 ${activeMainTab === 'tools' ? 'text-blue-300' : 'text-blue-600'}`} />
+                  <span>Guides</span>
+                </button>
+
+                {/* 4. Missions */}
+                <button
+                  onClick={() => setActiveMainTab('scenarios')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'scenarios'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <ShieldAlert className={`w-3.5 h-3.5 ${activeMainTab === 'scenarios' ? 'text-amber-300' : 'text-amber-600'}`} />
+                  <span>Missions</span>
+                  <span className={`text-3xs font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    activeMainTab === 'scenarios' ? 'bg-indigo-800 text-indigo-100' : 'bg-amber-100/80 text-amber-800 border border-amber-200/60'
+                  }`}>
+                    44
+                  </span>
+                </button>
+
+                {/* 5. Quizzes */}
+                <button
+                  onClick={() => setActiveMainTab('quizzes')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'quizzes'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${activeMainTab === 'quizzes' ? 'text-indigo-200' : 'text-indigo-600'}`} />
+                  <span>Quizzes</span>
+                  <span className={`text-3xs font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    activeMainTab === 'quizzes' ? 'bg-indigo-800 text-indigo-100' : 'bg-indigo-100/80 text-indigo-800 border border-indigo-200/60'
+                  }`}>
+                    285
+                  </span>
+                </button>
+
+                {/* 6. Matrix Comparison */}
+                <button
+                  onClick={() => setActiveMainTab('stacks')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'stacks'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <GitCompare className={`w-3.5 h-3.5 ${activeMainTab === 'stacks' ? 'text-purple-300' : 'text-purple-600'}`} />
+                  <span>Matrix</span>
+                  <span className={`text-3xs font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    activeMainTab === 'stacks' ? 'bg-indigo-800 text-indigo-100' : 'bg-purple-100/80 text-purple-800 border border-purple-200/60'
+                  }`}>
+                    57
+                  </span>
+                </button>
+
+                {/* 7. MBA Glossary */}
+                <button
+                  onClick={() => setActiveMainTab('glossary')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'glossary'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <FileText className={`w-3.5 h-3.5 ${activeMainTab === 'glossary' ? 'text-sky-300' : 'text-sky-600'}`} />
+                  <span>Glossary</span>
+                  <span className={`text-3xs font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    activeMainTab === 'glossary' ? 'bg-indigo-800 text-indigo-100' : 'bg-sky-100/80 text-sky-800 border border-sky-200/60'
+                  }`}>
+                    350+
+                  </span>
+                </button>
+
+                {/* 8. Performance Analytics */}
+                <button
+                  onClick={() => setActiveMainTab('performance')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'performance'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <BrainCircuit className={`w-3.5 h-3.5 ${activeMainTab === 'performance' ? 'text-indigo-200' : 'text-indigo-600'}`} />
+                  <span>Performance</span>
+                </button>
+              </nav>
+
+              {/* Right side helper info in Row 2 */}
+              <div className="hidden lg:flex items-center gap-3 shrink-0 text-2xs text-slate-500 font-medium pl-2">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  57 C-Suite Frameworks Ready
+                </span>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Navigation Dropdown Menu (Strict single-row header, overlay only when opened) */}
+        {isMobileNavOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-30 bg-slate-900/30 backdrop-blur-xs lg:hidden"
+              onClick={() => setIsMobileNavOpen(false)}
+            />
+            <div className="absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-xl z-40 p-4 lg:hidden animate-in fade-in slide-in-from-top-2 duration-150 max-h-[85vh] overflow-y-auto">
+              <div className="text-2xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                Navigation
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <button
+                  onClick={() => {
+                    setActiveMainTab('home');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'home' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Home</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('simulators');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'simulators' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <PlayCircle className="w-4 h-4 text-emerald-500" />
+                  <span>Simulators</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('tools');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'tools' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 text-blue-500" />
+                  <span>Guides</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('scenarios');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'scenarios' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <ShieldAlert className="w-4 h-4 text-amber-500" />
+                  <span>Missions (44)</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('quizzes');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'quizzes' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4 text-indigo-500" />
+                  <span>Quizzes (285)</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('stacks');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'stacks' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <GitCompare className="w-4 h-4 text-purple-500" />
+                  <span>Matrix</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('glossary');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'glossary' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  <span>Glossary (350+)</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('performance');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer ${
+                    activeMainTab === 'performance' ? 'bg-indigo-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  <BrainCircuit className="w-4 h-4 text-indigo-400" />
+                  <span>Performance</span>
+                </button>
+              </div>
+
+              <div className="text-2xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                Executive Studio Tools
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setDeckSlideCount(loadDeckSlides().length);
+                    setIsDeckBuilderOpen(true);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-800 text-left cursor-pointer"
+                >
+                  <Presentation className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Board Deck ({deckSlideCount})</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsWorkbenchOpen(true);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-800 text-left cursor-pointer"
+                >
+                  <SplitSquareVertical className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Dual Studio</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsChainRunnerOpen(true);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-800 text-left cursor-pointer"
+                >
+                  <Gamepad2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Wargames</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsDossierModalOpen(true);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-800 text-left cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-slate-600 shrink-0" />
+                  <span>Dossier PDF</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAchievementsOpen(true);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-800 text-left cursor-pointer"
+                >
+                  <Trophy className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Badges</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsRecommenderOpen(true);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-800 text-left cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Wizard (R)</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       {/* 2. Streamlined Executive Framework Control Bar (Simulators & Guides) */}
