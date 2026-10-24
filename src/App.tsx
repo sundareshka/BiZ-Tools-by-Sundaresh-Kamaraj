@@ -151,7 +151,8 @@ import {
   BookmarkCheck,
   Award,
   Keyboard,
-  Camera
+  Camera,
+  Printer
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -902,79 +903,81 @@ export default function App() {
         </div>
 
         {/* Secondary View Navigation (Clean horizontal strip for screens < 2xl) */}
-        <div className="2xl:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs font-semibold">
-          <button
-            onClick={() => setActiveMainTab('home')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeMainTab === 'home' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <Home className="w-3.5 h-3.5 text-slate-400" />
-            <span>Home</span>
-          </button>
-          <button
-            onClick={() => setActiveMainTab('simulators')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeMainTab === 'simulators' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <PlayCircle className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Simulators</span>
-          </button>
-          <button
-            onClick={() => setActiveMainTab('tools')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              activeMainTab === 'tools' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5 text-blue-500" />
-            <span>Guides</span>
-          </button>
-          <button
-            onClick={() => setActiveMainTab('scenarios')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              activeMainTab === 'scenarios' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-            <span>Missions (44)</span>
-          </button>
-          <button
-            onClick={() => setActiveMainTab('quizzes')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              activeMainTab === 'quizzes' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Quizzes (285)</span>
-          </button>
-          <button
-            onClick={() => setActiveMainTab('stacks')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              activeMainTab === 'stacks' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <GitCompare className="w-3.5 h-3.5 text-purple-500" />
-            <span>Matrix</span>
-          </button>
-          <button
-            onClick={() => setActiveMainTab('glossary')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              activeMainTab === 'glossary' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5 text-slate-500" />
-            <span>Glossary</span>
-          </button>
-          <button
-            onClick={() => setActiveMainTab('performance')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeMainTab === 'performance' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
-            }`}
-          >
-            <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Performance</span>
-          </button>
+        <div className="2xl:hidden w-full border-t border-slate-100 bg-slate-50 py-2 px-4 overflow-x-auto flex justify-center">
+          <div className="flex items-center justify-center gap-1 min-w-max mx-auto text-xs font-semibold">
+            <button
+              onClick={() => setActiveMainTab('home')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === 'home' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <Home className="w-3.5 h-3.5 text-slate-400" />
+              <span>Home</span>
+            </button>
+            <button
+              onClick={() => setActiveMainTab('simulators')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === 'simulators' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <PlayCircle className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Simulators</span>
+            </button>
+            <button
+              onClick={() => setActiveMainTab('tools')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                activeMainTab === 'tools' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+              <span>Guides</span>
+            </button>
+            <button
+              onClick={() => setActiveMainTab('scenarios')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                activeMainTab === 'scenarios' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+              <span>Missions (44)</span>
+            </button>
+            <button
+              onClick={() => setActiveMainTab('quizzes')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                activeMainTab === 'quizzes' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Quizzes (285)</span>
+            </button>
+            <button
+              onClick={() => setActiveMainTab('stacks')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                activeMainTab === 'stacks' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <GitCompare className="w-3.5 h-3.5 text-purple-500" />
+              <span>Matrix</span>
+            </button>
+            <button
+              onClick={() => setActiveMainTab('glossary')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                activeMainTab === 'glossary' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>Glossary</span>
+            </button>
+            <button
+              onClick={() => setActiveMainTab('performance')}
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === 'performance' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Performance</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1071,10 +1074,10 @@ export default function App() {
                 {/* PDF Report Export Button */}
                 <button
                   onClick={() => setIsExportReportOpen(true)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-indigo-400 hover:text-indigo-900 shadow-2xs hover:animate-subtle-pulse group"
                   title="Export completed simulator session data as a printable PDF report"
                 >
-                  <Download className="w-3.5 h-3.5 text-indigo-600" />
+                  <Printer className="w-3.5 h-3.5 text-indigo-600 shrink-0 group-hover:scale-110 transition-transform duration-200" />
                   <span className="hidden sm:inline">Export PDF</span>
                 </button>
               </div>
