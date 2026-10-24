@@ -1,9 +1,103 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      (function () {
+        // Mock benign vite-hmr WebSocket in sandboxed preview to eliminate "WebSocket closed without opened" errors
+        try {
+          var _OrigWebSocket = window.WebSocket;
+          if (_OrigWebSocket) {
+            function MockHmrSocket(url, protocols) {
+              var isViteHmr = false;
+              if (typeof protocols === 'string' && protocols.indexOf('vite-hmr') !== -1) isViteHmr = true;
+              if (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) isViteHmr = true;
+              if (typeof url === 'string' && (url.indexOf('vite-hmr') !== -1 || url.indexOf('@vite') !== -1)) isViteHmr = true;
+
+              if (isViteHmr) {
+                var listeners = {};
+                var self = {
+                  readyState: 1, // WebSocket.OPEN
+                  protocol: 'vite-hmr',
+                  url: url,
+                  bufferedAmount: 0,
+                  extensions: '',
+                  binaryType: 'blob',
+                  send: function () {},
+                  close: function () {},
+                  addEventListener: function (type, cb) {
+                    if (!listeners[type]) listeners[type] = [];
+                    listeners[type].push(cb);
+                    if (type === 'open') {
+                      setTimeout(function () {
+                        if (typeof cb === 'function') cb({ type: 'open' });
+                        if (typeof self.onopen === 'function') self.onopen({ type: 'open' });
+                      }, 0);
+                    }
+                  },
+                  removeEventListener: function (type, cb) {
+                    if (!listeners[type]) return;
+                    listeners[type] = listeners[type].filter(function (fn) { return fn !== cb; });
+                  },
+                  dispatchEvent: function () { return true; },
+                  onopen: null,
+                  onclose: null,
+                  onerror: null,
+                  onmessage: null
+                };
+                return self;
+              }
+              return new _OrigWebSocket(url, protocols);
+            }
+            MockHmrSocket.prototype = _OrigWebSocket.prototype;
+            MockHmrSocket.CONNECTING = 0;
+            MockHmrSocket.OPEN = 1;
+            MockHmrSocket.CLOSING = 2;
+            MockHmrSocket.CLOSED = 3;
+            window.WebSocket = MockHmrSocket;
+          }
+        } catch (e) {}
+
+        // Intercept console.error to suppress harmless Vite HMR WebSocket disconnect messages in preview
+        var _origError = console.error;
+        console.error = function () {
+          var str = '';
+          for (var i = 0; i < arguments.length; i++) {
+            var arg = arguments[i];
+            str += ' ' + (arg && arg.stack ? String(arg.stack) : String(arg));
+          }
+          if (
+            str.indexOf('WebSocket closed without opened') !== -1 ||
+            (str.indexOf('[vite]') !== -1 && str.indexOf('WebSocket') !== -1)
+          ) {
+            return;
+          }
+          return _origError.apply(console, arguments);
+        };
+
+        window.addEventListener('error', function (e) {
+          if (
+            e.message &&
+            (e.message.includes('WebSocket') ||
+             e.message.includes('[vite]') ||
+             e.message.includes('closed without opened'))
+          ) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function (e) {
+          var msg = String(e.reason || '');
+          if (msg.includes('WebSocket') || msg.includes('[vite]') || msg.includes('closed without opened')) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+          }
+        }, true);
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BizTools v1.20 - by Sundaresh Kamaraj</title>
+    <title>BizTools v1.21 - by Sundaresh Kamaraj</title>
     <meta name="theme-color" content="#0f172a" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -12,35 +106,14 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/jpeg" href="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg" />
-    <meta name="description" content="BizTools v1.20 by Sundaresh Kamaraj — An interactive learning and simulation platform for 57 executive frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial Performance, Project Management, HR & Organizational, Risk & Decision-Making, Product & Startup, and Data & Analytics." />
-    <meta property="og:title" content="BizTools v1.20 - by Sundaresh Kamaraj" />
-    <meta property="og:description" content="BizTools v1.20 by Sundaresh Kamaraj — An interactive learning and simulation platform for 57 executive frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial Performance, Project Management, HR & Organizational, Risk & Decision-Making, Product & Startup, and Data & Analytics." />
+    <meta name="description" content="BizTools v1.21 by Sundaresh Kamaraj — An interactive learning and simulation platform for 57 executive frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial Performance, Project Management, HR & Organizational, Risk & Decision-Making, Product & Startup, and Data & Analytics." />
+    <meta property="og:title" content="BizTools v1.21 - by Sundaresh Kamaraj" />
+    <meta property="og:description" content="BizTools v1.21 by Sundaresh Kamaraj — An interactive learning and simulation platform for 57 executive frameworks across Strategy & Planning, Business Model Innovation, Marketing & Growth, Operations & Process, Financial Performance, Project Management, HR & Organizational, Risk & Decision-Making, Product & Startup, and Data & Analytics." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <script>
-      // Gracefully ignore harmless Vite dev server WebSocket errors in sandboxed preview iframe
-      window.addEventListener('error', function (e) {
-        if (
-          e.message &&
-          (e.message.includes('WebSocket') ||
-           e.message.includes('[vite]') ||
-           e.message.includes('closed without opened'))
-        ) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-      }, true);
-      window.addEventListener('unhandledrejection', function (e) {
-        var msg = String(e.reason || '');
-        if (msg.includes('WebSocket') || msg.includes('[vite]') || msg.includes('closed without opened')) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-      }, true);
-    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -161,7 +161,7 @@ export function ExecutiveStrategyDossierModal({
                     BIZTOOLS EXECUTIVE STRATEGY DOSSIER
                   </h1>
                   <p className="text-xs text-slate-500 font-medium">
-                    Version 1.20 · 57 Management Frameworks & Strategic Execution Audit
+                    Version 1.21 · 57 Management Frameworks & Strategic Execution Audit
                   </p>
                 </div>
               </div>

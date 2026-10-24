@@ -698,7 +698,7 @@ export default function App() {
                     BizTools
                   </h1>
                   <span className="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 tracking-wide font-mono hidden 2xl:inline-block">
-                    v1.20 · 57 Tools · 10 Pillars
+                    v1.21 · 57 Tools · 10 Pillars
                   </span>
                 </div>
                 <div
@@ -2137,7 +2137,7 @@ export default function App() {
               BizTools · Executive Strategy, Operations, Finance, Product & Data Analytics Platform
             </p>
             <p className="mt-0.5 text-slate-500">
-              by Sundaresh Kamaraj · Version 1.20 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
+              by Sundaresh Kamaraj · Version 1.21 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
             </p>
           </div>
 
