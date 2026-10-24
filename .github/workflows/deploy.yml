@@ -16,16 +16,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
+      # 2. Setup Node.js (no package-lock.json required for caching)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      # 3. Install dependencies
+      # 3. Install dependencies on every deployment
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm install --legacy-peer-deps
 
       # 4. Install missing react-is dependency
       - name: Install react-is
@@ -44,6 +43,7 @@ jobs:
             echo "ERROR: dist directory was not created."
             exit 1
           fi
+
           echo "Build completed successfully."
           ls -la dist
 
