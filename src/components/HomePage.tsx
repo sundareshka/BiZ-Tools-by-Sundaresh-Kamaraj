@@ -201,7 +201,7 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.1] font-display text-balance">
-              Executive Decisionnnnnnnnnnnnnnnnnnnnnnnnnnnnnn Systems & Strategic Modeling Suite
+              Executive Decision Systems & Strategic Modeling Suite
             </h1>
 
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
