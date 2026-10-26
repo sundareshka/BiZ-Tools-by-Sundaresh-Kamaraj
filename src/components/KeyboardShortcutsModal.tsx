@@ -21,11 +21,13 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
   const shortcuts = [
     { key: 'Cmd / Ctrl + K', action: 'Global Search & Quick Jump', desc: 'Search across all 57 tools, categories, and frameworks' },
     { key: '[  /  ]', action: 'Previous / Next Framework', desc: 'Navigate sequentially across the active pillar simulation stack' },
+    { key: 'A', action: 'Strategy Health Audit', desc: 'Open 10-indicator executive radar assessment and action plan' },
     { key: 'W', action: 'Toggle Save to Workspace', desc: 'Bookmark or unbookmark active framework to local workspace' },
     { key: 'E', action: 'View Mock Examples Modal', desc: 'Open realistic industry templates (SaaS, DTC, Industrial)' },
     { key: 'C', action: 'Compare within Pillar', desc: 'Toggle side-by-side benchmark comparison with peer tools' },
     { key: 'S', action: 'Share Deep-Link URL', desc: 'Generate and copy active configuration URL to clipboard' },
     { key: 'R', action: 'Framework Recommender', desc: 'Open 3-step strategic challenge diagnostic wizard' },
+    { key: 'Space / M / R', action: 'Flashcard Study Controls', desc: 'Space to flip card, M to mark Mastered, R to mark Review' },
     { key: '?', action: 'Keyboard Shortcuts Cheatsheet', desc: 'Show this keyboard navigation cheatsheet' },
     { key: 'Esc', action: 'Close Modal or Drawer', desc: 'Dismiss any active overlay or slide-out drawer' }
   ];

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ToolDefinition } from '../data/toolsData.ts';
 import { getToolIcon } from '../data/toolIcons.ts';
-import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, Clock, Layers, ArrowRight, Play, Sparkles, Download } from 'lucide-react';
+import { BookOpen, CheckCircle2, AlertTriangle, Lightbulb, Clock, Layers, ArrowRight, Play, Sparkles, Download, Presentation, FileText } from 'lucide-react';
 import { useUserProgress } from '../utils/userProgress.ts';
 import { triggerCompletionConfetti } from '../utils/confetti.ts';
 import { AudioBriefingPlayer } from './AudioBriefingPlayer.tsx';
@@ -10,12 +10,16 @@ export function ToolDetailView({
   tool,
   onLaunchSimulator,
   onLaunchQuiz,
-  onExportReport
+  onExportReport,
+  onAddToDeck,
+  onCopyMemo
 }: {
   tool: ToolDefinition;
   onLaunchSimulator: () => void;
   onLaunchQuiz: () => void;
   onExportReport?: () => void;
+  onAddToDeck?: () => void;
+  onCopyMemo?: () => void;
 }) {
   const [activeSection, setActiveSection] = useState<'overview' | 'caseStudy' | 'implementation' | 'tips'>('overview');
   const { isSimulatorDone, toggleSimulator, isQuizDone } = useUserProgress();
@@ -91,6 +95,26 @@ export function ToolDetailView({
               >
                 <Download className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Export PDF</span>
+              </button>
+            )}
+            {onAddToDeck && (
+              <button
+                onClick={onAddToDeck}
+                className="px-3 py-2 text-xs font-bold text-indigo-900 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                title="Add framework takeaway to executive Board Slide Deck"
+              >
+                <Presentation className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Add to Deck</span>
+              </button>
+            )}
+            {onCopyMemo && (
+              <button
+                onClick={onCopyMemo}
+                className="px-3 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                title="Copy structured executive strategy briefing memo to clipboard"
+              >
+                <FileText className="w-3.5 h-3.5 text-slate-500" />
+                <span>Copy Memo</span>
               </button>
             )}
           </div>

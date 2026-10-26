@@ -115,6 +115,8 @@ import { StrategyChainRunnerModal } from './components/StrategyChainRunnerModal.
 import { StrategyDeckSlideBuilderModal } from './components/StrategyDeckSlideBuilderModal.tsx';
 import { MultiFrameworkWorkbenchModal } from './components/MultiFrameworkWorkbenchModal.tsx';
 import { ExecutiveAchievementsModal } from './components/ExecutiveAchievementsModal.tsx';
+import { StrategyHealthAuditModal } from './components/StrategyHealthAuditModal.tsx';
+import { SITUATIONAL_TAGS } from './data/situationalTags.ts';
 import { getSnapshotsForTool, ScenarioSnapshot, decodeSnapshotFromURL } from './utils/scenarioSnapshots.ts';
 import { loadDeckSlides, saveDeckSlide } from './utils/slideDeck.ts';
 import { TOOL_ICONS, getToolIcon } from './data/toolIcons.ts';
@@ -162,7 +164,9 @@ import {
   SplitSquareVertical,
   Gamepad2,
   Menu,
-  X
+  X,
+  Activity,
+  Tag
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -248,6 +252,8 @@ export default function App() {
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState<boolean>(false);
   const [isRecommenderOpen, setIsRecommenderOpen] = useState<boolean>(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState<boolean>(false);
+  const [situationalFilter, setSituationalFilter] = useState<string | null>(null);
   const [appliedTemplateToast, setAppliedTemplateToast] = useState<string | null>(null);
 
   // New High-Impact Feature States
@@ -323,8 +329,49 @@ export default function App() {
       notes: `Captured from active ${currentTool.name} session.`
     });
     setDeckSlideCount(loadDeckSlides().length);
-    setAppliedTemplateToast(`Captured slide for ${currentTool.shortName} into Board Deck!`);
+    setAppliedTemplateToast(`✨ Added slide for ${currentTool.shortName} into Board Deck!`);
     setTimeout(() => setAppliedTemplateToast(null), 3000);
+  };
+
+  const handleCopyExecutiveMemo = async () => {
+    const memo = `# Executive Strategy Briefing Memorandum
+**Date:** ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+**Framework:** ${currentTool.name} (${currentTool.category})
+**Executive Lead:** Office of Strategy & Corporate Development · BizTools Platform
+**Reference URL:** https://sundaresh.blog
+
+## 1. Executive Summary & Strategic Context
+${currentTool.corePurpose}
+
+## 2. Quantitative & Analytical Methodology
+- **Time Horizon:** ${currentTool.horizon}
+- **Decision Scope:** ${currentTool.scope}
+- **Primary Deliverable:** ${currentTool.keyOutput}
+- **Analytical Mechanics:** ${currentTool.howItWorks}
+
+## 3. Real-World Corporate Benchmark Case
+- **Company:** ${currentTool.caseStudy.company} (${currentTool.caseStudy.profile || 'Enterprise Benchmark'})
+- **Challenge:** ${currentTool.caseStudy.challenge}
+- **Business Impact:** ${currentTool.caseStudy.results?.[0] || 'Validated operational efficiency and ROI'}
+
+## 4. 30-60-90 Day C-Suite Execution Plan
+1. **Days 1-30 (Baseline & Alignment):** Map baseline metrics using ${currentTool.shortName} mechanics and audit input data integrity.
+2. **Days 31-60 (Stress-Testing & Trade-offs):** Stress-test unit economics and resource bottlenecks against competitive shifts.
+3. **Days 61-90 (Board Governance & Rollout):** Cascade accountability via cross-functional OKRs and operational telemetry.
+
+## 5. Critical Pitfall to Avoid
+${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] || 'Avoid confusing operational efficiency with defensible strategy.'}
+
+---
+*Generated via BizTools C-Suite Platform by Sundaresh Kamaraj*`;
+
+    try {
+      await navigator.clipboard.writeText(memo);
+      setAppliedTemplateToast(`📋 Copied Executive Memo for ${currentTool.shortName} to clipboard!`);
+      setTimeout(() => setAppliedTemplateToast(null), 3000);
+    } catch (err) {
+      console.error('Failed to copy memo', err);
+    }
   };
 
   // Persistent user learning progress hook
@@ -508,6 +555,10 @@ export default function App() {
   };
 
   const filteredTools = ALL_TOOLS.filter(t => {
+    if (situationalFilter) {
+      const tag = SITUATIONAL_TAGS.find(st => st.id === situationalFilter);
+      if (tag && !tag.toolIds.includes(t.id)) return false;
+    }
     if (categoryFilter === 'Strategy') return t.category.includes('Strategy');
     if (categoryFilter === 'Innovation') return t.category.includes('Innovation');
     if (categoryFilter === 'Marketing') return t.category.includes('Marketing');
@@ -650,6 +701,9 @@ export default function App() {
       } else if (e.key.toLowerCase() === 'r') {
         e.preventDefault();
         setIsRecommenderOpen(prev => !prev);
+      } else if (e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setIsAuditModalOpen(prev => !prev);
       } else if (e.key.toLowerCase() === 's') {
         e.preventDefault();
         handleShareCurrentSimulator();
@@ -833,6 +887,28 @@ export default function App() {
                           Executive Suite & Tools
                         </div>
                         <div className="py-1 space-y-0.5">
+                          {/* Strategy Health Audit */}
+                          <button
+                            onClick={() => {
+                              setIsAuditModalOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                                <Activity className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-slate-800">Strategy Health Audit</div>
+                                <div className="text-2xs text-slate-500">10-point radar diagnosis</div>
+                              </div>
+                            </div>
+                            <kbd className="text-3xs font-mono font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">
+                              A
+                            </kbd>
+                          </button>
+
                           {/* Board Deck Builder */}
                           <button
                             onClick={() => {
@@ -1868,6 +1944,48 @@ export default function App() {
               </button>
             </div>
 
+            {/* Situational Filter Rail (Curated Context Tags) */}
+            <div className="py-1.5 flex items-center gap-1.5 overflow-x-auto min-w-0 w-full border-b border-slate-100 text-xs">
+              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
+                <Tag className="w-3 h-3 text-indigo-500" />
+                Situation:
+              </span>
+              <button
+                onClick={() => setSituationalFilter(null)}
+                className={`px-2.5 py-1 rounded-lg text-2xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  situationalFilter === null
+                    ? 'bg-slate-900 text-white font-bold shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                }`}
+              >
+                All Situations
+              </button>
+              {SITUATIONAL_TAGS.map(tag => {
+                const isActive = situationalFilter === tag.id;
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => {
+                      const next = isActive ? null : tag.id;
+                      setSituationalFilter(next);
+                      if (next && !tag.toolIds.includes(selectedToolId)) {
+                        handleSelectTool(tag.toolIds[0]);
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-2xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
+                      isActive
+                        ? 'bg-indigo-900 text-white border-indigo-900 font-bold shadow-2xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40'
+                    }`}
+                    title={`${tag.label}: ${tag.description}`}
+                  >
+                    <span>#{tag.shortLabel}</span>
+                    <span className="text-3xs font-mono opacity-80 ml-1">({tag.toolIds.length})</span>
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Bottom Row: Focused Tool Chips for the Active Pillar (Clean, not noisy) */}
             <div className="py-2 flex items-center gap-1.5 overflow-x-auto pb-2">
               {filteredTools.map((tool) => {
@@ -2383,7 +2501,7 @@ export default function App() {
               />
             )}
 
-            {/* 1-Click Industry Presets Toolbar & Snapshot Trigger */}
+            {/* 1-Click Industry & Corporate Presets Toolbar, Snapshot Trigger & Direct Export */}
             <SimulatorPresetToolbar
               tool={currentTool}
               activePresetId={activePresetId}
@@ -2391,6 +2509,8 @@ export default function App() {
               onResetDefault={handleResetDefault}
               onOpenSnapshots={() => setIsSnapshotModalOpen(true)}
               snapshotCount={snapshotCount}
+              onAddToDeck={handleAddCurrentToDeck}
+              onCopyMemo={handleCopyExecutiveMemo}
             />
 
             {/* Category 1: Strategy & Planning */}
@@ -2479,14 +2599,23 @@ export default function App() {
             onLaunchSimulator={() => setActiveMainTab('simulators')}
             onLaunchQuiz={() => setActiveMainTab('quizzes')}
             onExportReport={() => setIsExportReportOpen(true)}
+            onAddToDeck={handleAddCurrentToDeck}
+            onCopyMemo={handleCopyExecutiveMemo}
           />
         )}
 
         {/* VIEW 3: CRISIS MISSIONS & SCENARIOS */}
         {activeMainTab === 'scenarios' && <ScenarioSimulator />}
 
-        {/* VIEW 4: CERTIFICATION QUIZZES */}
-        {activeMainTab === 'quizzes' && <TrainingQuizModule />}
+        {/* VIEW 4: CERTIFICATION QUIZZES & FLASHCARDS */}
+        {activeMainTab === 'quizzes' && (
+          <TrainingQuizModule
+            onLaunchSimulator={(id) => {
+              handleSelectTool(id);
+              setActiveMainTab('simulators');
+            }}
+          />
+        )}
 
         {/* VIEW 5: MASTER COMPARISON MATRIX & STACKS */}
         {activeMainTab === 'stacks' && (
@@ -2689,6 +2818,17 @@ export default function App() {
         progress={progress}
         allTools={ALL_TOOLS}
         onOpenCertificate={() => setIsCertificateModalOpen(true)}
+      />
+
+      {/* Executive Strategy Health Audit & Radar Diagnosis Modal */}
+      <StrategyHealthAuditModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        allTools={ALL_TOOLS}
+        onSelectTool={(toolId) => {
+          handleSelectTool(toolId);
+          setActiveMainTab('simulators');
+        }}
       />
 
       {/* Floating Toast Notification for 1-Click Applied Template */}

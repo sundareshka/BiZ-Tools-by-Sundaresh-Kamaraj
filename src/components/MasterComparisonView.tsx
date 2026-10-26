@@ -9,7 +9,8 @@ import { HR_TOOLS_DATA, CATEGORY_7_STACKS } from '../data/hrToolsData.ts';
 import { RISK_TOOLS_DATA, CATEGORY_8_STACKS } from '../data/riskToolsData.ts';
 import { PRODUCT_TOOLS_DATA, CATEGORY_9_STACKS } from '../data/productToolsData.ts';
 import { ANALYTICS_TOOLS_DATA, CATEGORY_10_STACKS } from '../data/analyticsToolsData.ts';
-import { Layers, ArrowRight, CheckCircle2, Download, Printer, Filter, Sparkles } from 'lucide-react';
+import { Layers, ArrowRight, CheckCircle2, Download, Printer, Filter, Sparkles, Tag } from 'lucide-react';
+import { SITUATIONAL_TAGS } from '../data/situationalTags.ts';
 
 const ALL_TOOLS = [
   ...TOOLS_DATA,
@@ -49,6 +50,7 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('All');
   const [filterScope, setFilterScope] = useState<string>('All');
+  const [filterSituation, setFilterSituation] = useState<string>('All');
   const [selectedPillarId, setSelectedPillarId] = useState<string>('p1');
   const [selectedStackId, setSelectedStackId] = useState<string>('stack-b');
   const [showExportModal, setShowExportModal] = useState(false);
@@ -56,6 +58,10 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
   const filteredTools = ALL_TOOLS.filter(t => {
     if (filterCategory !== 'All' && !t.category.includes(filterCategory)) return false;
     if (filterDifficulty !== 'All' && !t.difficulty.toLowerCase().includes(filterDifficulty.toLowerCase())) return false;
+    if (filterSituation !== 'All') {
+      const tag = SITUATIONAL_TAGS.find(st => st.id === filterSituation);
+      if (tag && !tag.toolIds.includes(t.id)) return false;
+    }
     return true;
   });
 
@@ -313,6 +319,42 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
               </select>
             </div>
           </div>
+        </div>
+
+        {/* Situational Quick Filter Bar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
+            <Tag className="w-3 h-3 text-indigo-500" />
+            Situational Tag:
+          </span>
+          <button
+            onClick={() => setFilterSituation('All')}
+            className={`px-2.5 py-1 rounded-lg text-2xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              filterSituation === 'All'
+                ? 'bg-slate-900 text-white font-bold shadow-2xs'
+                : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+            }`}
+          >
+            All Situations ({ALL_TOOLS.length})
+          </button>
+          {SITUATIONAL_TAGS.map(tag => {
+            const isActive = filterSituation === tag.id;
+            return (
+              <button
+                key={tag.id}
+                onClick={() => setFilterSituation(isActive ? 'All' : tag.id)}
+                className={`px-2.5 py-1 rounded-lg text-2xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
+                  isActive
+                    ? 'bg-indigo-900 text-white border-indigo-900 font-bold shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40'
+                }`}
+                title={tag.description}
+              >
+                <span>#{tag.shortLabel}</span>
+                <span className="text-3xs font-mono opacity-80 ml-1">({tag.toolIds.length})</span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
