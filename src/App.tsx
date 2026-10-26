@@ -118,6 +118,8 @@ import { StrategyDeckSlideBuilderModal } from './components/StrategyDeckSlideBui
 import { MultiFrameworkWorkbenchModal } from './components/MultiFrameworkWorkbenchModal.tsx';
 import { ExecutiveAchievementsModal } from './components/ExecutiveAchievementsModal.tsx';
 import { StrategyHealthAuditModal } from './components/StrategyHealthAuditModal.tsx';
+import { ScenarioPresetsModal } from './components/ScenarioPresetsModal.tsx';
+import { StrategyVaultModal } from './components/StrategyVaultModal.tsx';
 import { SITUATIONAL_TAGS } from './data/situationalTags.ts';
 import { getSnapshotsForTool, ScenarioSnapshot, decodeSnapshotFromURL } from './utils/scenarioSnapshots.ts';
 import { loadDeckSlides, saveDeckSlide } from './utils/slideDeck.ts';
@@ -169,7 +171,9 @@ import {
   X,
   Activity,
   Tag,
-  UserCheck
+  UserCheck,
+  Briefcase,
+  Database
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -268,6 +272,8 @@ export default function App() {
   const [isDeckBuilderOpen, setIsDeckBuilderOpen] = useState<boolean>(false);
   const [isWorkbenchOpen, setIsWorkbenchOpen] = useState<boolean>(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState<boolean>(false);
+  const [isPresetsModalOpen, setIsPresetsModalOpen] = useState<boolean>(false);
+  const [isVaultModalOpen, setIsVaultModalOpen] = useState<boolean>(false);
   const [deckSlideCount, setDeckSlideCount] = useState<number>(() => {
     return typeof window !== 'undefined' ? loadDeckSlides().length : 2;
   });
@@ -1056,6 +1062,50 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
                             <kbd className="text-3xs font-mono font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">
                               R
                             </kbd>
+                          </button>
+
+                          {/* Industry Scenario Presets */}
+                          <button
+                            onClick={() => {
+                              setIsPresetsModalOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-700 flex items-center justify-center shrink-0 group-hover:bg-cyan-100 transition-colors">
+                                <Briefcase className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-slate-800">Industry Presets</div>
+                                <div className="text-2xs text-slate-500">5 enterprise case studies</div>
+                              </div>
+                            </div>
+                            <span className="text-3xs font-mono font-bold bg-cyan-100 text-cyan-800 px-1.5 py-0.5 rounded border border-cyan-200">
+                              Cases
+                            </span>
+                          </button>
+
+                          {/* Strategy Portfolio Vault (JSON) */}
+                          <button
+                            onClick={() => {
+                              setIsVaultModalOpen(true);
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                                <Database className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-slate-800">Strategy Vault</div>
+                                <div className="text-2xs text-slate-500">Backup / restore workspace JSON</div>
+                              </div>
+                            </div>
+                            <span className="text-3xs font-mono font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">
+                              JSON
+                            </span>
                           </button>
 
                           {/* Keyboard Shortcuts */}
@@ -2780,8 +2830,40 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
         onSelectTool={(id, view) => {
           handleSelectTool(id);
           if (view) {
-            setActiveMainTab(view);
+            setActiveMainTab(view as any);
           }
+        }}
+        onOpenPresets={() => setIsPresetsModalOpen(true)}
+        onOpenVault={() => setIsVaultModalOpen(true)}
+        onOpenDeck={() => setIsDeckBuilderOpen(true)}
+        onOpenAudit={() => setIsAuditModalOpen(true)}
+        onOpenCertificate={() => setIsCertificateModalOpen(true)}
+      />
+
+      {/* Industry Scenario Presets Modal */}
+      <ScenarioPresetsModal
+        isOpen={isPresetsModalOpen}
+        onClose={() => setIsPresetsModalOpen(false)}
+        onApplyPreset={(preset) => {
+          handleSelectTool(preset.primaryToolId);
+          setActiveMainTab('simulators');
+          setAppliedTemplateToast(`Applied "${preset.name}" into ${preset.primaryToolId.toUpperCase()}!`);
+          setTimeout(() => setAppliedTemplateToast(null), 3500);
+        }}
+        onLaunchTool={(toolId) => {
+          handleSelectTool(toolId);
+          setActiveMainTab('simulators');
+        }}
+        activeToolId={currentTool.id}
+      />
+
+      {/* Strategy Portfolio Vault (JSON Export / Restore) Modal */}
+      <StrategyVaultModal
+        isOpen={isVaultModalOpen}
+        onClose={() => setIsVaultModalOpen(false)}
+        onRestoreSuccess={(msg) => {
+          setWorkspaceToastMsg(msg);
+          setTimeout(() => setWorkspaceToastMsg(null), 3500);
         }}
       />
 

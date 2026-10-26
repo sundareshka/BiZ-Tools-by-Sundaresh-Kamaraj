@@ -63,8 +63,13 @@ export function ExecutiveStrategyDossierModal({
         {/* Modal Controls Toolbar (Hidden in Print) */}
         <div className="p-4 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center">
-              <FileText className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-slate-700 shadow-sm shrink-0">
+              <img
+                src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                alt="BizTools Logo"
+                className="w-full h-full object-cover rounded-md"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white leading-tight">Executive Strategy Dossier</h3>
@@ -315,9 +320,14 @@ export function ExecutiveStrategyDossierModal({
               </p>
             </div>
 
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center min-w-[200px]">
-              <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-1">
-                <ShieldCheck className="w-4 h-4" />
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center min-w-[220px] flex flex-col items-center">
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-300 p-0.5 shadow-2xs mb-1">
+                <img
+                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                  alt="BizTools Official Stamp"
+                  className="w-full h-full object-cover rounded-lg"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <span className="text-2xs font-bold text-slate-800 uppercase tracking-wider block">Boardroom Certified</span>
               <span className="text-3xs font-mono text-slate-500">{reportId}</span>

@@ -113,8 +113,13 @@ export function StrategyDeckSlideBuilderModal({
         {/* Top Header Controls (Hidden on print) */}
         <div className="p-3 sm:p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-3 text-white shrink-0 print:hidden">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
-              <Presentation className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-slate-700 shadow-sm shrink-0">
+              <img
+                src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                alt="BizTools Logo"
+                className="w-full h-full object-cover rounded-md"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -176,11 +181,21 @@ export function StrategyDeckSlideBuilderModal({
             {isCover && (
               <div className="h-full flex flex-col justify-between relative z-10">
                 <div className="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-                      Executive Strategy Dossier
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-white p-0.5 border border-slate-700 shadow-sm shrink-0">
+                      <img
+                        src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                        alt="BizTools Logo"
+                        className="w-full h-full object-cover rounded-lg"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 block">
+                        BizTools Executive Strategy Dossier
+                      </span>
+                      <span className="text-3xs text-slate-500 font-mono">Curriculum by Sundaresh Kamaraj</span>
+                    </div>
                   </div>
                   <span className="text-xs text-slate-500 font-mono">
                     {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -230,6 +245,12 @@ export function StrategyDeckSlideBuilderModal({
                 {/* Slide Top Metadata */}
                 <div className="flex items-center justify-between border-b border-slate-800/40 pb-3">
                   <div className="flex items-center gap-2.5">
+                    <img 
+                      src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg" 
+                      alt="BizTools by Sundaresh Kamaraj" 
+                      className="w-5 h-5 rounded object-contain bg-white/90 p-0.5 shadow-xs shrink-0" 
+                      referrerPolicy="no-referrer"
+                    />
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                       {activeFrameworkSlide.pillar}
                     </span>
@@ -237,9 +258,14 @@ export function StrategyDeckSlideBuilderModal({
                       Framework: {activeFrameworkSlide.toolName}
                     </span>
                   </div>
-                  <span className="text-xs font-mono text-slate-500">
-                    Slide {currentSlideIndex + 1}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xs font-mono tracking-wider text-slate-500 uppercase hidden sm:inline">
+                      BizTools Executive Suite
+                    </span>
+                    <span className="text-xs font-mono text-slate-500">
+                      Slide {currentSlideIndex + 1}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Slide Body */}
@@ -324,9 +350,17 @@ export function StrategyDeckSlideBuilderModal({
             {isSummary && (
               <div className="h-full flex flex-col justify-between relative z-10">
                 <div className="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">
-                    Executive Next Steps & 90-Day Execution
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <img 
+                      src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg" 
+                      alt="BizTools by Sundaresh Kamaraj" 
+                      className="w-5 h-5 rounded object-contain bg-white/90 p-0.5 shadow-xs shrink-0" 
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">
+                      Executive Next Steps & 90-Day Execution
+                    </span>
+                  </div>
                   <span className="text-xs text-slate-500 font-mono">Final Slide</span>
                 </div>
 

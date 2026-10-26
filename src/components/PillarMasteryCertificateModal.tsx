@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Award,
   CheckCircle2,
   Printer,
   Download,
@@ -9,7 +8,9 @@ import {
   Sparkles,
   ShieldCheck,
   Building,
-  Check
+  Check,
+  Linkedin,
+  Twitter
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
 
@@ -68,6 +69,28 @@ export function PillarMasteryCertificateModal({
     }
   };
 
+  const handleAddToLinkedIn = () => {
+    const certName = `Executive Certificate in ${pillarName}`;
+    const orgName = 'BizTools by Sundaresh Kamaraj';
+    const now = new Date();
+    const certUrl = 'https://sundaresh.blog';
+    const certId = `BZ-${Date.now().toString(36).toUpperCase()}`;
+    const url = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(certName)}&organizationName=${encodeURIComponent(orgName)}&issueYear=${now.getFullYear()}&issueMonth=${now.getMonth() + 1}&certUrl=${encodeURIComponent(certUrl)}&certId=${encodeURIComponent(certId)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShareLinkedIn = () => {
+    const summary = `I earned the Executive Certificate in ${pillarName} on BizTools by Sundaresh Kamaraj. Verified strategy credential: https://sundaresh.blog`;
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://sundaresh.blog')}&summary=${encodeURIComponent(summary)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShareTwitter = () => {
+    const text = `Proud to earn the Executive Certificate in ${pillarName} on BizTools by @KaSundaresh! 🚀 Verified strategic competency: https://sundaresh.blog`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
       <div
@@ -77,9 +100,16 @@ export function PillarMasteryCertificateModal({
         aria-labelledby="certificate-title"
       >
         {/* Controls Bar */}
-        <div className="p-4 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0 print:hidden">
-          <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-amber-400" />
+        <div className="p-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-slate-700 shadow-sm shrink-0">
+              <img
+                src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                alt="BizTools Logo"
+                className="w-full h-full object-cover rounded-md"
+                referrerPolicy="no-referrer"
+              />
+            </div>
             <span className="font-bold text-xs sm:text-sm">
               {isMastered ? 'Executive Certificate of Mastery' : 'Certification In Progress'}
             </span>
@@ -90,22 +120,41 @@ export function PillarMasteryCertificateModal({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
+            <button
+              onClick={handleAddToLinkedIn}
+              className="px-2.5 py-1.5 bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Add this verified credential to your LinkedIn profile"
+            >
+              <Linkedin className="w-3.5 h-3.5" />
+              <span>Add to LinkedIn</span>
+            </button>
+
+            <button
+              onClick={handleShareLinkedIn}
+              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+              title="Share credential on LinkedIn feed"
+            >
+              <Share2 className="w-3.5 h-3.5 text-[#0A66C2]" />
+              <span>LinkedIn</span>
+            </button>
+
+            <button
+              onClick={handleShareTwitter}
+              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+              title="Share credential on X / Twitter"
+            >
+              <Twitter className="w-3.5 h-3.5 text-sky-400" />
+              <span>X</span>
+            </button>
+
             <button
               onClick={handlePrint}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Print or Save as PDF"
             >
-              <Printer className="w-3.5 h-3.5" />
+              <Printer className="w-3.5 h-3.5 text-amber-400" />
               <span>Print / PDF</span>
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-              <span>{copiedLink ? 'Copied!' : 'Share'}</span>
             </button>
 
             <button
@@ -128,18 +177,26 @@ export function PillarMasteryCertificateModal({
               </div>
             </div>
 
-            {/* Top Seal & Heading */}
-            <div className="relative z-10 space-y-2">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 flex items-center justify-center mx-auto shadow-md ring-4 ring-amber-100">
-                <Award className="w-8 h-8" />
+            {/* Top Seal & Heading with Official Application Logo */}
+            <div className="relative z-10 flex flex-col items-center space-y-3">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white border-2 border-amber-400 shadow-md p-1 shrink-0">
+                <img
+                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                  alt="BizTools by Sundaresh Kamaraj"
+                  className="w-full h-full object-cover rounded-xl"
+                  referrerPolicy="no-referrer"
+                />
               </div>
-              <div className="text-3xs uppercase font-mono font-bold tracking-widest text-slate-400">
-                BizTools Executive Certificate of Mastery
+
+              <div className="space-y-1">
+                <div className="text-3xs uppercase font-mono font-bold tracking-widest text-slate-500">
+                  BizTools Executive Strategy Curriculum · by Sundaresh Kamaraj
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-display">
+                  Certificate of Executive Competency
+                </h2>
+                <div className="w-28 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 mx-auto rounded-full my-2" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-display">
-                Certificate of Executive Competency
-              </h2>
-              <div className="w-24 h-1 bg-amber-400 mx-auto rounded-full my-2" />
             </div>
 
             {/* Recipient & Body */}
@@ -176,18 +233,25 @@ export function PillarMasteryCertificateModal({
             </div>
 
             {/* Signatures & Verification Seal */}
-            <div className="relative z-10 pt-8 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-3 gap-6 items-end text-xs">
+            <div className="relative z-10 pt-8 border-t border-slate-200 grid grid-cols-3 gap-3 sm:gap-6 items-end text-xs">
               <div className="text-left space-y-1">
                 <div className="font-mono text-3xs text-slate-400 uppercase">Issue Date</div>
                 <div className="font-semibold text-slate-800 text-xs">{issueDate}</div>
                 <div className="text-3xs text-slate-500 font-mono">Verified ID: BZ-{Date.now().toString(36).toUpperCase()}</div>
               </div>
 
-              <div className="hidden sm:flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full border-2 border-emerald-500/40 bg-emerald-50 text-emerald-700 flex items-center justify-center font-mono font-bold text-3xs uppercase tracking-tighter">
-                  <ShieldCheck className="w-6 h-6 text-emerald-600" />
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-300 bg-white shadow-xs p-1 flex items-center justify-center">
+                  <img
+                    src="/assets/aistudio/QR-BiZTools_by_Sundaresh_Kamaraj-aaa426c8_f9bdb1da.png"
+                    alt="Scan to Verify Credential - BizTools by Sundaresh Kamaraj"
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
-                <span className="text-3xs text-emerald-700 font-bold mt-1">VERIFIED CERT</span>
+                <span className="text-3xs text-slate-600 font-bold mt-1 font-mono tracking-wider uppercase">
+                  Scan to Verify
+                </span>
               </div>
 
               <div className="text-right space-y-1">

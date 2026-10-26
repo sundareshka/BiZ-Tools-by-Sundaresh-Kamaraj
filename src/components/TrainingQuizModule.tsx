@@ -24,7 +24,10 @@ import {
   Check,
   Shuffle,
   Eye,
-  CheckCheck
+  CheckCheck,
+  Linkedin,
+  Twitter,
+  Share2
 } from 'lucide-react';
 import { loadUserProgress, saveQuizAnswersAndCheckCompletion } from '../utils/userProgress.ts';
 import { getToolIcon } from '../data/toolIcons.ts';
@@ -729,15 +732,29 @@ export function TrainingQuizModule({
       {showCertificate && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-8 shadow-2xl border border-slate-300 space-y-6 text-center relative">
-            <div className="space-y-2">
-              <span className="text-2xs font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                Official Certification of Achievement
-              </span>
+            <div className="space-y-3">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white border-2 border-amber-400/80 shadow-md p-1 shrink-0">
+                  <img
+                    src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                    alt="BizTools by Sundaresh Kamaraj"
+                    className="w-full h-full object-cover rounded-xl"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="text-left">
+                  <span className="text-2xs font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 block w-fit">
+                    Official Certification of Achievement
+                  </span>
+                  <div className="text-xs font-semibold text-slate-700 font-display mt-1">BizTools · by Sundaresh Kamaraj</div>
+                </div>
+              </div>
+
               <h3 className="text-2xl font-bold text-slate-900 font-display mt-2">
                 Certificate of Strategic Planning Competency
               </h3>
-              <p className="text-xs text-slate-500">
-                Demonstrated mastery of the foundational business frameworks grounded in the training curriculum by Sundaresh Kamaraj.
+              <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                Demonstrated rigorous analytical mastery of foundational business frameworks grounded in the training curriculum by Sundaresh Kamaraj.
               </p>
             </div>
 
@@ -754,22 +771,78 @@ export function TrainingQuizModule({
               </p>
             </div>
 
-            <div className="flex items-center justify-between text-2xs text-slate-400 pt-2 border-t border-slate-100">
-              <span>Date: October 24, 2026</span>
-              <span>Verification ID: STRAT-2026-CERT</span>
-              <span>Authority: sundaresh.blog</span>
+            <div className="flex items-center justify-between text-2xs text-slate-500 pt-3 border-t border-slate-200 font-mono">
+              <div className="text-left space-y-0.5">
+                <div>Date: October 26, 2026</div>
+                <div className="text-3xs text-slate-400">ID: BZ-QUIZ-2026</div>
+              </div>
+              <div className="flex flex-col items-center">
+                <img
+                  src="/assets/aistudio/QR-BiZTools_by_Sundaresh_Kamaraj-aaa426c8_f9bdb1da.png"
+                  alt="Scan to Verify"
+                  className="w-12 h-12 object-contain rounded-md border border-slate-200 p-0.5 bg-white shadow-xs"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="text-3xs text-slate-500 font-bold mt-0.5 tracking-wider uppercase">Scan to Verify</span>
+              </div>
+              <div className="text-right space-y-0.5">
+                <div className="text-slate-800 font-semibold">Authority: sundaresh.blog</div>
+                <div className="text-3xs text-slate-400">BizTools Curriculum</div>
+              </div>
             </div>
 
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => {
+                  const certName = 'Certificate of Strategic Planning Competency';
+                  const orgName = 'BizTools by Sundaresh Kamaraj';
+                  const now = new Date();
+                  const certUrl = 'https://sundaresh.blog';
+                  const url = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(certName)}&organizationName=${encodeURIComponent(orgName)}&issueYear=${now.getFullYear()}&issueMonth=${now.getMonth() + 1}&certUrl=${encodeURIComponent(certUrl)}&certId=BZ-QUIZ-2026`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+                className="px-3 py-1.5 bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                title="Add to LinkedIn profile"
+              >
+                <Linkedin className="w-3.5 h-3.5" />
+                <span>Add to LinkedIn</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const summary = `I earned the Certificate of Strategic Planning Competency (${percentage}% score) across C-Suite frameworks on BizTools by Sundaresh Kamaraj. https://sundaresh.blog`;
+                  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://sundaresh.blog')}&summary=${encodeURIComponent(summary)}`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                title="Share on LinkedIn"
+              >
+                <Share2 className="w-3.5 h-3.5 text-[#0A66C2]" />
+                <span>LinkedIn</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const text = `Proud to achieve ${percentage}% on the Strategic Planning Competency certification on BizTools by @KaSundaresh! 🚀 https://sundaresh.blog`;
+                  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                title="Share on X"
+              >
+                <Twitter className="w-3.5 h-3.5 text-sky-400" />
+                <span>X</span>
+              </button>
+
               <button
                 onClick={() => window.print()}
-                className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <Printer className="w-3.5 h-3.5" /> Print Certificate
+                <Printer className="w-3.5 h-3.5 text-amber-400" /> Print
               </button>
               <button
                 onClick={() => setShowCertificate(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
               >
                 Close
               </button>

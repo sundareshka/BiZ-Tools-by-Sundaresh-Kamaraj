@@ -118,8 +118,13 @@ ${
         {/* Modal Top Header */}
         <div className="p-4 sm:p-5 bg-slate-900 text-white flex items-center justify-between shrink-0 no-print">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
-              <FileText className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white p-0.5 border border-slate-700 shadow-sm shrink-0">
+              <img
+                src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                alt="BizTools Logo"
+                className="w-full h-full object-cover rounded-lg"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -233,11 +238,21 @@ ${
 
             {/* Simulated Paper Sheet */}
             <div className="simulator-report-paper flex-1 bg-white p-5 rounded-lg border border-slate-200/80 shadow-2xs space-y-4 overflow-y-auto max-h-[380px] text-slate-800 text-xs print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0 print-page">
-              {/* Paper Top Band */}
-              <div className="report-header-band p-3 bg-slate-900 text-white rounded-lg space-y-1">
-                <div className="text-2xs font-mono text-slate-400">BIZTOOLS EXECUTIVE STRATEGY BRIEF</div>
-                <div className="text-base font-bold report-title">{tool.name}</div>
-                <div className="text-3xs text-slate-300 report-subtitle">{tool.category} · {companyName}</div>
+              {/* Paper Top Band with Application Logo */}
+              <div className="report-header-band p-4 bg-slate-900 text-white rounded-lg flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="text-2xs font-mono text-slate-400">BIZTOOLS EXECUTIVE STRATEGY BRIEF</div>
+                  <div className="text-base sm:text-lg font-bold report-title">{tool.name}</div>
+                  <div className="text-3xs text-slate-300 report-subtitle">{tool.category} · {companyName}</div>
+                </div>
+                <div className="w-12 h-12 rounded-xl overflow-hidden bg-white p-0.5 border border-slate-700 shadow-sm shrink-0">
+                  <img
+                    src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                    alt="BizTools Logo"
+                    className="w-full h-full object-cover rounded-lg"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
               </div>
 
               {/* Metadata Pill Box */}

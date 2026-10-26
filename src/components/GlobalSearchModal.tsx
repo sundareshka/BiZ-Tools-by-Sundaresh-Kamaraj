@@ -8,7 +8,12 @@ import {
   Sparkles,
   Command,
   CornerDownLeft,
-  CheckCircle2
+  CheckCircle2,
+  Database,
+  Briefcase,
+  Layers,
+  ShieldCheck,
+  Award
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
 import { getToolIcon } from '../data/toolIcons.ts';
@@ -18,14 +23,24 @@ interface GlobalSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   tools: ToolDefinition[];
-  onSelectTool: (toolId: string, targetView?: 'simulators' | 'tools') => void;
+  onSelectTool: (toolId: string, targetView?: 'simulators' | 'tools' | 'stacks' | 'glossary' | 'author' | 'quizzes' | 'home') => void;
+  onOpenPresets?: () => void;
+  onOpenVault?: () => void;
+  onOpenDeck?: () => void;
+  onOpenAudit?: () => void;
+  onOpenCertificate?: () => void;
 }
 
 export function GlobalSearchModal({
   isOpen,
   onClose,
   tools,
-  onSelectTool
+  onSelectTool,
+  onOpenPresets,
+  onOpenVault,
+  onOpenDeck,
+  onOpenAudit,
+  onOpenCertificate
 }: GlobalSearchModalProps) {
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -91,6 +106,85 @@ export function GlobalSearchModal({
       return inName || inShort || inTagline || inPurpose || inCompany || inCategory || inOrigin;
     });
   }, [tools, query, activeCategory]);
+
+  // Quick Executive Command Palette Actions
+  const quickActions = useMemo(() => {
+    const list = [
+      {
+        id: 'presets',
+        title: 'Industry Scenario Presets',
+        subtitle: 'Load 5 enterprise case studies with realistic metrics',
+        icon: Briefcase,
+        badge: 'Presets',
+        badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+        action: () => { onClose(); onOpenPresets?.(); }
+      },
+      {
+        id: 'vault',
+        title: 'Strategy Portfolio Vault & Backup',
+        subtitle: 'Export or restore workspace, custom snapshots & credentials via JSON',
+        icon: Database,
+        badge: 'JSON Vault',
+        badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        action: () => { onClose(); onOpenVault?.(); }
+      },
+      {
+        id: 'soap',
+        title: 'Strategy on a Page (SOAP) & Radar Matrix',
+        subtitle: 'View 57-framework cross comparison and 8-axis maturity radar',
+        icon: Layers,
+        badge: 'Master Matrix',
+        badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+        action: () => { onClose(); onSelectTool('swot', 'stacks'); }
+      },
+      {
+        id: 'deck',
+        title: '16:9 Strategy Deck Presentation Builder',
+        subtitle: 'Compile executive briefing slides for board distribution',
+        icon: PlayCircle,
+        badge: 'Board Deck',
+        badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+        action: () => { onClose(); onOpenDeck?.(); }
+      },
+      {
+        id: 'audit',
+        title: 'Executive Strategy Health Audit',
+        subtitle: 'Diagnose organizational health across 8 strategic pillars',
+        icon: ShieldCheck,
+        badge: 'Health Audit',
+        badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
+        action: () => { onClose(); onOpenAudit?.(); }
+      },
+      {
+        id: 'cert',
+        title: 'Executive Certificate of Competency',
+        subtitle: 'View, print, and add your verified strategy credential to LinkedIn',
+        icon: Award,
+        badge: 'Certificate',
+        badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+        action: () => { onClose(); onOpenCertificate?.(); }
+      },
+      {
+        id: 'author',
+        title: 'Author Biography · Sundaresh Kamaraj',
+        subtitle: 'Enterprise strategist, researcher, publications & social networks',
+        icon: BookOpen,
+        badge: 'Author Bio',
+        badgeColor: 'bg-violet-100 text-violet-800 border-violet-200',
+        action: () => { onClose(); onSelectTool('swot', 'author'); }
+      }
+    ];
+
+    if (!query.trim()) return list.slice(0, 4);
+
+    const q = query.trim().toLowerCase();
+    return list.filter(a =>
+      a.title.toLowerCase().includes(q) ||
+      a.subtitle.toLowerCase().includes(q) ||
+      a.badge.toLowerCase().includes(q) ||
+      a.id.includes(q)
+    );
+  }, [query, onClose, onOpenPresets, onOpenVault, onOpenDeck, onOpenAudit, onOpenCertificate, onSelectTool]);
 
   // Reset selectedIndex when results change
   useEffect(() => {
@@ -234,6 +328,49 @@ export function GlobalSearchModal({
           ref={listRef}
           className="overflow-y-auto flex-1 divide-y divide-slate-100 p-2 space-y-1 focus:outline-none"
         >
+          {/* Executive Quick Actions */}
+          {quickActions.length > 0 && (
+            <div className="pb-2 space-y-1">
+              <div className="px-3 pt-1 pb-1 text-3xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-indigo-500" />
+                <span>Executive Quick Actions</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 px-1">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={action.action}
+                      className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-indigo-300 hover:shadow-xs transition-all text-left flex items-start gap-2.5 group cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors shadow-2xs">
+                        <Icon className="w-4 h-4 text-slate-700 group-hover:text-indigo-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 truncate">
+                            {action.title}
+                          </span>
+                          <span className={`text-3xs font-semibold px-1.5 py-0.2 rounded border shrink-0 ${action.badgeColor}`}>
+                            {action.badge}
+                          </span>
+                        </div>
+                        <p className="text-3xs text-slate-500 truncate mt-0.5">
+                          {action.subtitle}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="px-3 pt-2 pb-1 text-3xs font-extrabold uppercase tracking-wider text-slate-400">
+            Strategic Frameworks ({filteredTools.length})
+          </div>
+
           {filteredTools.length > 0 ? (
             filteredTools.map((tool, idx) => {
               const isSelected = idx === selectedIndex;

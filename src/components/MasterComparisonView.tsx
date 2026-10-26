@@ -11,6 +11,7 @@ import { PRODUCT_TOOLS_DATA, CATEGORY_9_STACKS } from '../data/productToolsData.
 import { ANALYTICS_TOOLS_DATA, CATEGORY_10_STACKS } from '../data/analyticsToolsData.ts';
 import { Layers, ArrowRight, CheckCircle2, Download, Printer, Filter, Sparkles, Tag } from 'lucide-react';
 import { SITUATIONAL_TAGS } from '../data/situationalTags.ts';
+import { ExecutiveRadarChart } from './ExecutiveRadarChart.tsx';
 
 const ALL_TOOLS = [
   ...TOOLS_DATA,
@@ -104,6 +105,9 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
           Strategy on a Page
         </button>
       </div>
+
+      {/* 8-Axis Strategic Maturity Radar & Fortune 500 Benchmark Diagnostic */}
+      <ExecutiveRadarChart />
 
       {/* Recommended Strategy Stacks Section */}
       <div className="space-y-4">
@@ -413,13 +417,21 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-3xl w-full p-8 shadow-2xl border border-slate-300 space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <div>
-                <span className="text-2xs font-bold uppercase tracking-wider text-slate-500">Executive Synthesis</span>
-                <h3 className="text-xl font-bold text-slate-900 font-display">Strategy on a Page (SOAP)</h3>
+              <div className="flex items-center gap-3.5">
+                <img
+                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                  alt="BizTools by Sundaresh Kamaraj"
+                  className="w-12 h-12 rounded-xl object-contain bg-slate-50 border border-slate-200 p-1 shadow-xs shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+                <div>
+                  <span className="text-2xs font-bold uppercase tracking-wider text-slate-500">Executive Synthesis • BizTools</span>
+                  <h3 className="text-xl font-bold text-slate-900 font-display">Strategy on a Page (SOAP)</h3>
+                </div>
               </div>
               <button
                 onClick={() => window.print()}
-                className="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 rounded-lg flex items-center gap-1.5"
+                className="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg flex items-center gap-1.5 shadow-xs transition"
               >
                 <Printer className="w-3.5 h-3.5" /> Print / Save PDF
               </button>
@@ -457,10 +469,19 @@ export function MasterComparisonView({ onSelectTool }: { onSelectTool: (id: stri
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-2 text-3xs text-slate-400 font-mono">
+                <img
+                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
+                  alt="BizTools Logo"
+                  className="w-4 h-4 rounded object-contain shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+                <span>BizTools Executive Strategy Suite • Sundaresh Kamaraj</span>
+              </div>
               <button
                 onClick={() => setShowExportModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 rounded-lg"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
               >
                 Close
               </button>
