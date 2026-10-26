@@ -120,6 +120,7 @@ import { ExecutiveAchievementsModal } from './components/ExecutiveAchievementsMo
 import { StrategyHealthAuditModal } from './components/StrategyHealthAuditModal.tsx';
 import { ScenarioPresetsModal } from './components/ScenarioPresetsModal.tsx';
 import { StrategyVaultModal } from './components/StrategyVaultModal.tsx';
+import { INDUSTRY_PRESETS } from './data/industryPresetsData.ts';
 import { SITUATIONAL_TAGS } from './data/situationalTags.ts';
 import { getSnapshotsForTool, ScenarioSnapshot, decodeSnapshotFromURL } from './utils/scenarioSnapshots.ts';
 import { loadDeckSlides, saveDeckSlide } from './utils/slideDeck.ts';
@@ -2152,6 +2153,22 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
               setActiveMainTab(view);
             }}
             onNavigateTab={(tab) => setActiveMainTab(tab)}
+            completedSimulatorsCount={progress.completedSimulators.length}
+            completedQuizzesCount={progress.completedQuizzes.length}
+            onOpenHealthAudit={() => setIsAuditModalOpen(true)}
+            onOpenCertificate={() => setIsCertificateModalOpen(true)}
+            onOpenPresets={() => setIsPresetsModalOpen(true)}
+            onOpenSearch={() => setIsSearchOpen(true)}
+            onOpenDeckBuilder={() => setIsDeckBuilderOpen(true)}
+            onOpenStrategyVault={() => setIsVaultModalOpen(true)}
+            onApplyPreset={(presetId, primaryToolId) => {
+              handleSelectTool(primaryToolId);
+              setActiveMainTab('simulators');
+              const found = INDUSTRY_PRESETS.find(p => p.id === presetId);
+              if (found) {
+                handleSelectPreset(found.id, found.name, found.appliedParameters);
+              }
+            }}
           />
         )}
 

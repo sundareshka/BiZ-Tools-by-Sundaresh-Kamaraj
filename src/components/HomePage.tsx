@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   PlayCircle,
   BookOpen,
@@ -13,7 +13,6 @@ import {
   Sparkles,
   SlidersHorizontal,
   ChevronRight,
-  Building,
   Coins,
   KanbanSquare,
   Users,
@@ -25,18 +24,216 @@ import {
   BrainCircuit,
   Award,
   HelpCircle,
-  ChevronDown
+  ChevronDown,
+  Search,
+  Activity,
+  Briefcase,
+  Zap,
+  RotateCcw,
+  Check,
+  Building,
+  Printer,
+  Sliders,
+  Flame,
+  Key
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
 import { DailyBusinessInsight } from './DailyBusinessInsight.tsx';
+import { INDUSTRY_PRESETS, IndustryPreset } from '../data/industryPresetsData.ts';
+import { getToolIcon } from '../data/toolIcons.ts';
 
-interface HomePageProps {
+export interface HomePageProps {
   allTools: ToolDefinition[];
   onSelectTool: (toolId: string, view: 'simulators' | 'tools' | 'quizzes') => void;
   onNavigateTab: (tab: 'home' | 'simulators' | 'tools' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance' | 'author') => void;
+  completedSimulatorsCount?: number;
+  completedQuizzesCount?: number;
+  onOpenHealthAudit?: () => void;
+  onOpenCertificate?: () => void;
+  onOpenPresets?: () => void;
+  onOpenSearch?: () => void;
+  onOpenDeckBuilder?: () => void;
+  onOpenStrategyVault?: () => void;
+  onApplyPreset?: (presetId: string, primaryToolId: string) => void;
 }
 
-export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProps) {
+// Strategic Triage Diagnostic Prescription Matrix
+interface TriagePrescription {
+  title: string;
+  subtitle: string;
+  diagnosticNote: string;
+  sundareshPrinciple: string;
+  tools: {
+    toolId: string;
+    stepNumber: string;
+    phase: string;
+    rationale: string;
+  }[];
+}
+
+const TRIAGE_PRESCRIPTIONS: Record<string, TriagePrescription> = {
+  'margin': {
+    title: 'Margin Compression & Capital Optimization Protocol',
+    subtitle: 'Deconstruct operating leverage, isolate fixed cost leakage, and purge low-yield processes.',
+    diagnosticNote: 'When gross margins erode, aggressive sales volume rarely rescues EBITDA. The solution requires systematic fixed-cost re-baselining and Dupont ROE decomposition.',
+    sundareshPrinciple: 'In high-inflation or compressed-pricing regimes, EBITDA is preserved through asset turnover velocity and unit contribution discipline, not speculative top-line growth.',
+    tools: [
+      { toolId: 'dupont', stepNumber: '01', phase: 'Capital Decomposition', rationale: 'Deconstruct ROE into Net Margin, Asset Turnover, and Financial Leverage to pinpoint the leakage.' },
+      { toolId: 'breakeven', stepNumber: '02', phase: 'Operating Leverage', rationale: 'Calculate contribution margin per unit and quantify margin-of-safety volume buffers.' },
+      { toolId: 'toc', stepNumber: '03', phase: 'Throughput Bottlenecks', rationale: 'Exploit the single rate-limiting process constraint to accelerate cash conversion velocity.' }
+    ]
+  },
+  'growth': {
+    title: 'Market Saturation & Value Innovation Protocol',
+    subtitle: 'Escape commoditized red oceans, redefine buyer criteria, and open uncontested market spaces.',
+    diagnosticNote: 'Mature industries trap enterprises in price-matching wars. Sustained growth requires diverging from legacy industry factors via Four Actions curve plotting.',
+    sundareshPrinciple: 'True competitive strategy is not about beating rivals at their existing game; it is about creating uncontested market space that makes the competition irrelevant.',
+    tools: [
+      { toolId: 'swot', stepNumber: '01', phase: 'Environmental Audit', rationale: 'Execute TOWS cross-mapping to convert external market shifts into high-conviction attack strategies.' },
+      { toolId: 'blueocean', stepNumber: '02', phase: 'Value Curve Divergence', rationale: 'Eliminate and reduce costly legacy factors while raising and creating premium buyer benefits.' },
+      { toolId: 'ansoff', stepNumber: '03', phase: 'Portfolio Expansion', rationale: 'Evaluate market penetration vs. product expansion risk vectors and capital allocation requirements.' }
+    ]
+  },
+  'bottlenecks': {
+    title: 'Operational Agility & Waste Elimination Protocol',
+    subtitle: 'Compress lead times, eliminate systemic cycle variance, and establish synchronized pull systems.',
+    diagnosticNote: 'Operational delays originate from non-value-added waiting, uneven batch sizes, and hidden queues across department boundaries.',
+    sundareshPrinciple: 'Process excellence is the elimination of organizational friction. An hour lost at the system bottleneck is an hour lost for the entire enterprise forever.',
+    tools: [
+      { toolId: 'vsm', stepNumber: '01', phase: 'Value Stream Mapping', rationale: 'Map total lead time vs. processing touch time to expose massive non-value-added waiting steps.' },
+      { toolId: 'dmaic', stepNumber: '02', phase: 'Root-Cause Six Sigma', rationale: 'Apply Define-Measure-Analyze-Improve-Control to eliminate variance and root-cause defects.' },
+      { toolId: 'sipoc', stepNumber: '03', phase: 'High-Level Boundary Scan', rationale: 'Align Suppliers, Inputs, Process, Outputs, and Customers across executive handoffs.' }
+    ]
+  },
+  'unit_econ': {
+    title: 'Customer Unit Economics & Retention Engine Protocol',
+    subtitle: 'Drive down CAC payback duration, protect gross retention, and engineer organic expansion loops.',
+    diagnosticNote: 'Acquiring churn-prone accounts with >18-month CAC payback burns balance sheet liquidity. Sustainable growth hinges on net revenue expansion.',
+    sundareshPrinciple: 'Valuation multiples in modern enterprises are defined by Net Revenue Retention (NRR). Expanding an existing customer produces 3.8x higher equity value than acquiring a replacement logo.',
+    tools: [
+      { toolId: 'unit_economics', stepNumber: '01', phase: 'LTV / CAC Physics', rationale: 'Simulate gross margin, payback horizon, and magic number thresholds under varying churn.' },
+      { toolId: 'pirate_metrics', stepNumber: '02', phase: 'AARRR Funnel Velocity', rationale: 'Diagnose drop-off rates across Acquisition, Activation, Retention, Referral, and Revenue.' },
+      { toolId: 'kano', stepNumber: '03', phase: 'Feature Value Prioritization', rationale: 'Differentiate baseline must-haves from high-delight features that drive willingness to pay.' }
+    ]
+  },
+  'alignment': {
+    title: 'Organizational Execution & Governance Alignment Protocol',
+    subtitle: 'Eliminate executive silo friction, synchronize quarterly OKRs, and cement decision rights.',
+    diagnosticNote: 'Strategic plans rarely fail from poor intent; they fail from misaligned incentive structures, vague accountability, and ambiguous ownership.',
+    sundareshPrinciple: 'Culture and organizational structure must follow strategy with military precision. Strategy without clear RACI accountability is merely corporate wishful thinking.',
+    tools: [
+      { toolId: 'mckinsey_7s', stepNumber: '01', phase: 'Systemic Alignment', rationale: 'Audit mutual reinforcement across Strategy, Structure, Systems, Shared Values, Style, Staff, Skills.' },
+      { toolId: 'raci_matrix', stepNumber: '02', phase: 'Decision Governance', rationale: 'Designate exactly one Accountable owner per strategic deliverable to eliminate consensus paralysis.' },
+      { toolId: 'okr_framework', stepNumber: '03', phase: 'Cadence & Outcomes', rationale: 'Cascade ambitious Objectives and verifiable Key Results down to weekly operational execution.' }
+    ]
+  },
+  'risk': {
+    title: 'Asymmetric Risk & Scenario Governance Protocol',
+    subtitle: 'Stress-test balance sheets under macroeconomic volatility, supply shocks, and black-swan shocks.',
+    diagnosticNote: 'Linear forecasts collapse during structural macroeconomic volatility. Leadership teams must model stochastic probability distributions.',
+    sundareshPrinciple: 'Executive leadership is the art of navigating uncertainty with asymmetric upside while guaranteeing enterprise survival against ruinous tail-risk events.',
+    tools: [
+      { toolId: 'risk_matrix', stepNumber: '01', phase: 'Severity Matrix', rationale: 'Quantify corporate vulnerabilities across 5x5 impact and probability grids with mitigation costs.' },
+      { toolId: 'scenario_planning', stepNumber: '02', phase: 'Macro Plausibility Matrix', rationale: 'Construct 2x2 critical uncertainty quadrants to rehearse high-conviction contingent responses.' },
+      { toolId: 'premortem', stepNumber: '03', phase: 'Psychological Stress Test', rationale: 'Assume project failure 18 months forward to uncover hidden assumptions and institutional blind spots.' }
+    ]
+  }
+};
+
+// Curated Executive Day-1 Strategic Flight Paths
+interface StrategicTrack {
+  id: string;
+  name: string;
+  role: string;
+  timeEstimate: string;
+  accentColor: string;
+  badgeClass: string;
+  description: string;
+  steps: {
+    toolId: string;
+    stepName: string;
+    pillarName: string;
+    objective: string;
+  }[];
+}
+
+const STRATEGIC_TRACKS: StrategicTrack[] = [
+  {
+    id: 'c-suite',
+    name: 'The C-Suite Strategist Track',
+    role: 'Chief Executive Officer & Chief Strategy Officer',
+    timeEstimate: '35 mins',
+    accentColor: 'indigo',
+    badgeClass: 'bg-indigo-100 text-indigo-900 border-indigo-200',
+    description: 'Establish baseline environmental posture, identify asymmetric market divergence opportunities, and align corporate portfolio allocation.',
+    steps: [
+      { toolId: 'swot', stepName: 'TOWS Matrix', pillarName: 'Strategy', objective: 'Audit external threats & leverage core internal strengths' },
+      { toolId: 'porter5', stepName: 'Porter Five Forces', pillarName: 'Strategy', objective: 'Analyze structural industry power and profit pools' },
+      { toolId: 'blueocean', stepName: 'Blue Ocean Canvas', pillarName: 'Strategy', objective: 'Diverge from commoditized red ocean competition' },
+      { toolId: 'mckinsey_7s', stepName: 'McKinsey 7S', pillarName: 'HR & Org', objective: 'Verify organizational alignment before strategic rollout' }
+    ]
+  },
+  {
+    id: 'cfo-turnaround',
+    name: 'The CFO & Turnaround Architect Track',
+    role: 'Chief Financial Officer & Restructuring Director',
+    timeEstimate: '40 mins',
+    accentColor: 'emerald',
+    badgeClass: 'bg-emerald-100 text-emerald-900 border-emerald-200',
+    description: 'Diagnose balance sheet leverage, model operating margin break-even points, and eliminate capital allocation drag.',
+    steps: [
+      { toolId: 'dupont', stepName: 'DuPont ROE Analysis', pillarName: 'Financial', objective: 'Deconstruct return on equity into margin, turnover, and leverage' },
+      { toolId: 'breakeven', stepName: 'Break-Even Economics', pillarName: 'Financial', objective: 'Determine minimum viable volume to service fixed liabilities' },
+      { toolId: 'toc', stepName: 'Theory of Constraints', pillarName: 'Operations', objective: 'Exploit system bottlenecks to maximize cash throughput' },
+      { toolId: 'dcf_wacc', stepName: 'DCF & WACC Valuation', pillarName: 'Financial', objective: 'Model cost of capital hurdle rates against terminal value' }
+    ]
+  },
+  {
+    id: 'product-gtm',
+    name: 'The Product & GTM Leader Track',
+    role: 'VP Product & Chief Commercial Officer',
+    timeEstimate: '30 mins',
+    accentColor: 'amber',
+    badgeClass: 'bg-amber-100 text-amber-900 border-amber-200',
+    description: 'Validate customer problem spaces, optimize payback horizons, and align cross-functional product roadmaps to high-LTV cohorts.',
+    steps: [
+      { toolId: 'lean_canvas', stepName: 'Lean Canvas', pillarName: 'Innovation', objective: 'Map rapid 1-page business model hypothesis and unfair moats' },
+      { toolId: 'pirate_metrics', stepName: 'Pirate Metrics (AARRR)', pillarName: 'Marketing', objective: 'Diagnose conversion velocity across the customer journey' },
+      { toolId: 'unit_economics', stepName: 'Unit Economics (CAC/LTV)', pillarName: 'Marketing', objective: 'Model gross margin payback under voluntary churn' },
+      { toolId: 'kano', stepName: 'Kano Model', pillarName: 'Product', objective: 'Prioritize feature backlog by customer emotional delight' }
+    ]
+  },
+  {
+    id: 'operations-excellence',
+    name: 'The Operations & Quality Director Track',
+    role: 'Chief Operating Officer & VP Operational Excellence',
+    timeEstimate: '35 mins',
+    accentColor: 'teal',
+    badgeClass: 'bg-teal-100 text-teal-900 border-teal-200',
+    description: 'Compress end-to-end lead time, eliminate the 8 deadly wastes, and establish rigorous statistical variance controls.',
+    steps: [
+      { toolId: 'vsm', stepName: 'Value Stream Mapping', pillarName: 'Operations', objective: 'Expose waiting time vs. active processing touch time' },
+      { toolId: 'dmaic', stepName: 'Six Sigma DMAIC', pillarName: 'Operations', objective: 'Apply statistical variance reduction to critical processes' },
+      { toolId: 'sipoc', stepName: 'SIPOC Matrix', pillarName: 'Operations', objective: 'Define boundary interfaces between suppliers and customers' },
+      { toolId: 'raci_matrix', stepName: 'RACI Governance', pillarName: 'Project', objective: 'Eliminate accountability ambiguity across department handoffs' }
+    ]
+  }
+];
+
+export function HomePage({
+  allTools,
+  onSelectTool,
+  onNavigateTab,
+  completedSimulatorsCount = 0,
+  completedQuizzesCount = 0,
+  onOpenHealthAudit,
+  onOpenCertificate,
+  onOpenPresets,
+  onOpenSearch,
+  onOpenDeckBuilder,
+  onOpenStrategyVault,
+  onApplyPreset
+}: HomePageProps) {
   // Interactive Hero Mini-Simulator State (DuPont ROE interactive sandbox)
   const [netMargin, setNetMargin] = useState<number>(14.5);
   const [assetTurnover, setAssetTurnover] = useState<number>(1.25);
@@ -48,8 +245,34 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
   // Active FAQ accordion state for AEO/GEO Answer Center
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
+  // Quick Command Search State
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
+
+  // Strategic Triage Diagnostic State
+  const [selectedUrgency, setSelectedUrgency] = useState<string>('margin');
+  const [selectedModel, setSelectedModel] = useState<string>('enterprise_b2b');
+
+  // Selected Strategic Flight Path Track
+  const [activeTrackId, setActiveTrackId] = useState<string>('c-suite');
+
   // Calculate live DuPont ROE on hero
   const calculatedRoe = ((netMargin / 100) * assetTurnover * equityMultiplier * 100).toFixed(1);
+
+  // Live filter of all tools based on quick search query
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return allTools
+      .filter(t =>
+        t.name.toLowerCase().includes(q) ||
+        t.shortName.toLowerCase().includes(q) ||
+        t.tagline.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q) ||
+        t.caseStudy.company.toLowerCase().includes(q)
+      )
+      .slice(0, 6);
+  }, [allTools, searchQuery]);
 
   const pillarsData = [
     {
@@ -165,15 +388,19 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
   ];
 
   const currentPillar = pillarsData[activePillarIndex];
-
-  // Helper to get tools for active pillar
   const pillarTools = allTools.filter(t => t.category.toLowerCase().includes(currentPillar.id.toLowerCase()));
+
+  // Active Triage Prescription
+  const activePrescription = TRIAGE_PRESCRIPTIONS[selectedUrgency] || TRIAGE_PRESCRIPTIONS['margin'];
+
+  // Active Flight Path
+  const activeTrack = STRATEGIC_TRACKS.find(t => t.id === activeTrackId) || STRATEGIC_TRACKS[0];
 
   return (
     <div className="space-y-16 py-4">
       {/* 1. HERO SECTION: Executive Positioning + Interactive Live Model Preview */}
       <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white border border-slate-800 p-6 sm:p-10 lg:p-14 shadow-xl">
-        {/* Subtle geometric grid backdrop */}
+        {/* Geometric backdrop */}
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
@@ -185,7 +412,7 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           {/* Left Column: Executive Proposition */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400">
+            <div className="flex items-center gap-2.5 text-xs font-medium text-slate-400 flex-wrap">
               <div className="w-7 h-7 rounded-lg overflow-hidden bg-white border border-slate-700 shadow-2xs shrink-0 flex items-center justify-center">
                 <img
                   src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
@@ -201,7 +428,7 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
               <span className="text-amber-400 font-semibold font-mono">57 Core Frameworks</span>
               <span aria-hidden="true">·</span>
               <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-3xs font-mono font-bold">
-                Version 1.21
+                Version 1.22
               </span>
             </div>
 
@@ -210,11 +437,11 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
             </h1>
 
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
-              Master 57 foundational frameworks across 10 executive disciplines. Move beyond passive theory with live numerical simulators, 44 crisis scenario missions, and 285 rigorous certification assessments.
+              Master 57 foundational frameworks across 10 executive disciplines. Move beyond passive theory with live numerical simulators, 44 crisis scenario missions, 5 curated enterprise case presets, and 285 rigorous certification assessments.
             </p>
 
             {/* Direct Action CTAs */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               <button
                 onClick={() => onNavigateTab('simulators')}
                 className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer group"
@@ -232,22 +459,27 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
                 <span>Certification Assessments</span>
               </button>
 
-              <button
-                onClick={() => onNavigateTab('stacks')}
-                className="px-4 py-3.5 text-xs text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-1.5"
-              >
-                <GitCompare className="w-3.5 h-3.5" />
-                <span>Master Matrix</span>
-              </button>
+              {onOpenHealthAudit && (
+                <button
+                  onClick={onOpenHealthAudit}
+                  className="px-4 py-3.5 bg-indigo-950/80 hover:bg-indigo-900 text-indigo-200 border border-indigo-500/40 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Run 10-Point Strategic Health Audit"
+                >
+                  <Activity className="w-4 h-4 text-indigo-400" />
+                  <span>Health Audit</span>
+                </button>
+              )}
 
-              <button
-                onClick={() => onNavigateTab('performance')}
-                className="px-4 py-3.5 text-xs text-indigo-400 hover:text-indigo-300 font-semibold transition-colors flex items-center justify-center gap-1.5"
-                title="View session performance & complexity analytics"
-              >
-                <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Performance</span>
-              </button>
+              {onOpenPresets && (
+                <button
+                  onClick={onOpenPresets}
+                  className="px-4 py-3.5 bg-slate-800/80 hover:bg-slate-800 text-amber-300 border border-amber-500/30 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Explore 5 Curated Enterprise Case Studies"
+                >
+                  <Briefcase className="w-4 h-4 text-amber-400" />
+                  <span>Case Presets</span>
+                </button>
+              )}
             </div>
 
             {/* Architecture Metrics Strip */}
@@ -366,12 +598,750 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         </div>
       </section>
 
-      {/* 1.5 DAILY BUSINESS STRATEGY INSIGHT (Powered by Gemini AI) */}
+      {/* 2. HERO SEARCH & EXECUTIVE COMMAND BAR (SUGGESTION #4) */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs relative">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Search Input Container */}
+          <div className="relative flex-1">
+            <div className="relative flex items-center">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                placeholder="Search 57 frameworks, metrics, or case studies (e.g., 'Turnaround', 'DuPont', 'CAC', 'Pricing', 'Bottlenecks')..."
+                className="w-full pl-10 pr-24 py-2.5 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden transition-all shadow-2xs"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-12 text-2xs text-slate-400 hover:text-slate-600 px-1 py-0.5"
+                >
+                  Clear
+                </button>
+              )}
+              {onOpenSearch && (
+                <button
+                  onClick={onOpenSearch}
+                  className="absolute right-2 px-2 py-1 rounded bg-slate-200/70 hover:bg-slate-300 text-slate-600 font-mono text-3xs font-semibold flex items-center gap-1 cursor-pointer"
+                  title="Open Executive Command Palette (Cmd+K)"
+                >
+                  <Key className="w-2.5 h-2.5" />
+                  <span>⌘K</span>
+                </button>
+              )}
+            </div>
+
+            {/* Instant Search Dropdown Popover */}
+            {searchQuery.trim().length > 0 && isSearchFocused && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                <div className="px-3 py-1.5 bg-slate-50 text-3xs font-bold text-slate-500 uppercase tracking-wider flex justify-between">
+                  <span>Matching Frameworks ({searchResults.length})</span>
+                  <button onClick={() => setIsSearchFocused(false)} className="text-indigo-600 hover:underline">
+                    Close
+                  </button>
+                </div>
+                {searchResults.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-slate-500">
+                    No frameworks matched "{searchQuery}". Try browsing by discipline or pressing ⌘K.
+                  </div>
+                ) : (
+                  searchResults.map(tool => {
+                    const ToolIcon = getToolIcon(tool.id);
+                    return (
+                      <div
+                        key={tool.id}
+                        className="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                            <ToolIcon className="w-3.5 h-3.5 text-indigo-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 truncate flex items-center gap-1.5">
+                              <span>{tool.name}</span>
+                              <span className="text-3xs font-mono font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
+                                {tool.category}
+                              </span>
+                            </div>
+                            <div className="text-3xs text-slate-500 truncate">
+                              {tool.tagline} · Case: {tool.caseStudy.company}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => {
+                              onSelectTool(tool.id, 'simulators');
+                              setIsSearchFocused(false);
+                            }}
+                            className="px-2.5 py-1 text-2xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-md border border-emerald-200 transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            <PlayCircle className="w-3 h-3 text-emerald-600" />
+                            <span>Sim</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              onSelectTool(tool.id, 'tools');
+                              setIsSearchFocused(false);
+                            }}
+                            className="px-2.5 py-1 text-2xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            <BookOpen className="w-3 h-3 text-slate-500" />
+                            <span>Guide</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Curated Situation Tags */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 min-w-0 text-xs shrink-0">
+            <span className="text-3xs font-bold text-slate-400 uppercase tracking-wider shrink-0">
+              Quick Focus:
+            </span>
+            {[
+              { label: '#Turnaround', toolId: 'dupont' },
+              { label: '#PricingPower', toolId: 'blueocean' },
+              { label: '#CACPayback', toolId: 'unit_economics' },
+              { label: '#Bottlenecks', toolId: 'toc' },
+              { label: '#M&ASynergy', toolId: 'dcf_wacc' },
+              { label: '#ZeroBasedBudget', toolId: 'breakeven' },
+              { label: '#OKRsExecution', toolId: 'okr_framework' }
+            ].map(tag => (
+              <button
+                key={tag.label}
+                onClick={() => {
+                  onSelectTool(tag.toolId, 'simulators');
+                }}
+                className="px-2.5 py-1 rounded-lg text-2xs font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-900 border border-slate-200 hover:border-indigo-300 text-slate-700 whitespace-nowrap transition-all cursor-pointer"
+                title={`Launch ${tag.label} simulator directly`}
+              >
+                {tag.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. 30-SECOND STRATEGIC TRIAGE DIAGNOSTIC WIDGET (SUGGESTION #1) */}
+      <section className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 lg:p-10 text-white border border-indigo-900/60 shadow-xl space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-indigo-900/60 pb-5">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-400 mb-1">
+              <Zap className="w-4 h-4 text-amber-400" />
+              <span>30-Second Boardroom Triage</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight font-display">
+              Prescribe Your 3-Tool Strategic Stack
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+              Select your organization's immediate operational pressure and operating model. BizTools computes the sequential analytical stack recommended by Sundaresh Kamaraj.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-3xs font-mono font-bold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+              Zero-Friction Decision Engine
+            </span>
+          </div>
+        </div>
+
+        {/* Urgency Selector Buttons */}
+        <div className="space-y-4">
+          <div className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            Step 1: Select Immediate Corporate Mandate
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {[
+              { id: 'margin', label: 'Margin Compression', desc: 'Cost leakage & falling EBITDA', icon: Coins },
+              { id: 'growth', label: 'Market Saturation', desc: 'Stalled growth & red oceans', icon: Compass },
+              { id: 'bottlenecks', label: 'Throughput Friction', desc: 'Process waste & lead-time drag', icon: Layers },
+              { id: 'unit_econ', label: 'High CAC & Churn', desc: 'Poor payback & retention drop', icon: Target },
+              { id: 'alignment', label: 'Execution Silos', desc: 'Misaligned OKRs & governance', icon: Users },
+              { id: 'risk', label: 'Asymmetric Risk', desc: 'Macro volatility & shocks', icon: AlertOctagon }
+            ].map(urgency => {
+              const isSelected = selectedUrgency === urgency.id;
+              const Icon = urgency.icon;
+              return (
+                <button
+                  key={urgency.id}
+                  onClick={() => setSelectedUrgency(urgency.id)}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white border-indigo-400 shadow-md ring-2 ring-indigo-400/40 font-bold'
+                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:bg-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-indigo-400'}`} />
+                    {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold leading-tight">{urgency.label}</div>
+                    <div className={`text-3xs mt-0.5 line-clamp-1 ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>
+                      {urgency.desc}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Operating Model Selector */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <span className="text-3xs font-bold text-slate-400 uppercase tracking-wider shrink-0">
+            Operating Model:
+          </span>
+          {[
+            { id: 'enterprise_b2b', label: 'Enterprise B2B' },
+            { id: 'saas_tech', label: 'SaaS & Digital Tech' },
+            { id: 'industrial_ops', label: 'Industrial & Supply Chain' },
+            { id: 'consumer_d2c', label: 'Consumer & Retail' }
+          ].map(model => (
+            <button
+              key={model.id}
+              onClick={() => setSelectedModel(model.id)}
+              className={`px-3 py-1 rounded-lg text-2xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
+                selectedModel === model.id
+                  ? 'bg-white text-slate-950 font-bold border-white shadow-xs'
+                  : 'bg-slate-900/60 text-slate-300 border-slate-800 hover:bg-slate-800'
+              }`}
+            >
+              {model.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Computed Triage Output Card */}
+        <div className="bg-slate-950 rounded-2xl border border-indigo-900/60 p-5 sm:p-6 space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-mono text-indigo-400 mb-1">
+                <span>Prescription Generated</span>
+                <span aria-hidden="true">·</span>
+                <span>{activePrescription.title}</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                {activePrescription.subtitle}
+              </h3>
+              <p className="text-xs text-slate-300 mt-1 italic">
+                "{activePrescription.sundareshPrinciple}"
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {onOpenDeckBuilder && (
+                <button
+                  onClick={onOpenDeckBuilder}
+                  className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Open Board Deck Builder"
+                >
+                  <Printer className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Send to Board Deck</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 3 Recommended Tools Sequential Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {activePrescription.tools.map(item => {
+              const toolDef = allTools.find(t => t.id === item.toolId);
+              if (!toolDef) return null;
+              const ToolIcon = getToolIcon(toolDef.id);
+
+              return (
+                <div
+                  key={item.toolId}
+                  className="bg-slate-900/90 rounded-xl border border-slate-800 hover:border-indigo-500/60 p-4 transition-all flex flex-col justify-between space-y-3 group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between text-2xs mb-2">
+                      <span className="font-mono font-bold text-indigo-400 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800/40">
+                        Phase {item.stepNumber}: {item.phase}
+                      </span>
+                      <span className="text-3xs text-slate-400 font-mono">
+                        {toolDef.category}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-6 h-6 rounded-md bg-indigo-950 flex items-center justify-center shrink-0 border border-indigo-800/50">
+                        <ToolIcon className="w-3.5 h-3.5 text-indigo-300" />
+                      </div>
+                      <h4 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
+                        {toolDef.name}
+                      </h4>
+                    </div>
+
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      {item.rationale}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                    <button
+                      onClick={() => onSelectTool(toolDef.id, 'simulators')}
+                      className="px-3 py-1.5 text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <PlayCircle className="w-3.5 h-3.5 text-slate-950" />
+                      <span>Launch Simulator</span>
+                    </button>
+
+                    <button
+                      onClick={() => onSelectTool(toolDef.id, 'tools')}
+                      className="text-2xs font-semibold text-slate-400 hover:text-white transition-colors"
+                    >
+                      View Guide →
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. EXECUTIVE "DAY-1 STRATEGIC TRACKS" (ROLE-BASED FLIGHT PATHS) (SUGGESTION #2) */}
+      <section className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Curated Flight Paths
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-display">
+              Executive Day-1 Strategic Tracks
+            </h2>
+            <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+              Skip decision fatigue across 57 frameworks. Select your executive role for an integrated, multi-step sequence designed for boardroom delivery.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-2xs font-mono text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+              4 Disciplined Tracks
+            </span>
+          </div>
+        </div>
+
+        {/* Track Selector Tabs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {STRATEGIC_TRACKS.map(track => {
+            const isSelected = activeTrackId === track.id;
+            return (
+              <button
+                key={track.id}
+                onClick={() => setActiveTrackId(track.id)}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
+                  isSelected
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/20'
+                    : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-2xs'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between text-2xs mb-1">
+                    <span className={`font-mono font-bold px-2 py-0.5 rounded text-3xs ${
+                      isSelected ? 'bg-slate-800 text-indigo-300' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {track.timeEstimate}
+                    </span>
+                    <ChevronRight className={`w-3.5 h-3.5 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`} />
+                  </div>
+                  <h3 className="text-sm font-bold tracking-tight">
+                    {track.name}
+                  </h3>
+                  <p className={`text-2xs mt-0.5 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                    {track.role}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active Track Detailed Flow Canvas */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <span className="font-mono font-bold text-slate-900">{activeTrack.role}</span>
+                <span aria-hidden="true">·</span>
+                <span className="text-indigo-600 font-semibold">{activeTrack.timeEstimate} Complete Flow</span>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                {activeTrack.name}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-3xl">
+                {activeTrack.description}
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                const firstStep = activeTrack.steps[0];
+                if (firstStep) onSelectTool(firstStep.toolId, 'simulators');
+              }}
+              className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-xs flex items-center gap-2 shrink-0 self-start sm:self-center cursor-pointer"
+            >
+              <span>Start Track (Step 1)</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+          </div>
+
+          {/* Sequential Step Timeline */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+            {activeTrack.steps.map((step, idx) => {
+              const toolDef = allTools.find(t => t.id === step.toolId);
+              const ToolIcon = getToolIcon(step.toolId);
+
+              return (
+                <div
+                  key={step.toolId}
+                  className="bg-slate-50/70 hover:bg-white rounded-xl border border-slate-200 hover:border-indigo-300 p-4 transition-all shadow-2xs space-y-3 flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between text-2xs mb-1.5">
+                      <span className="font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                        Milestone 0{idx + 1}
+                      </span>
+                      <span className="text-3xs text-slate-400 font-mono">
+                        {step.pillarName}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-6 h-6 rounded-md bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs">
+                        <ToolIcon className="w-3.5 h-3.5 text-indigo-600" />
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                        {toolDef?.name || step.stepName}
+                      </h4>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {step.objective}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                    <button
+                      onClick={() => onSelectTool(step.toolId, 'simulators')}
+                      className="px-2.5 py-1 text-2xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <PlayCircle className="w-3 h-3 text-emerald-600" />
+                      <span>Simulate</span>
+                    </button>
+                    <button
+                      onClick={() => onSelectTool(step.toolId, 'tools')}
+                      className="text-2xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+                    >
+                      Guide →
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. CURATED ENTERPRISE CASE STUDY SPOTLIGHT (SUGGESTION #3) */}
+      <section className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Real-World Executive Benchmarks
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-display">
+              Enterprise Case Presets
+            </h2>
+            <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+              1-click pre-populated case study configurations tested against global benchmarks (Stripe, Apple, Toyota, Mayo Clinic, and Revolut).
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {onOpenPresets && (
+              <button
+                onClick={onOpenPresets}
+                className="text-xs font-semibold text-slate-700 hover:text-slate-950 flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-2xs"
+              >
+                <Briefcase className="w-3.5 h-3.5 text-amber-600" />
+                <span>View All 5 Case Presets</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 5 Enterprise Case Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {INDUSTRY_PRESETS.slice(0, 3).map((preset: IndustryPreset) => {
+            const primaryTool = allTools.find(t => t.id === preset.primaryToolId);
+            const PrimaryIcon = primaryTool ? getToolIcon(primaryTool.id) : Compass;
+
+            return (
+              <div
+                key={preset.id}
+                className="bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-all p-5 shadow-xs flex flex-col justify-between space-y-4 group"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-2xs mb-2">
+                    <span className={`px-2 py-0.5 rounded font-mono font-bold border text-3xs ${preset.badgeColor}`}>
+                      {preset.industry.split('&')[0]}
+                    </span>
+                    <span className="text-3xs text-slate-400 font-mono">
+                      {preset.toolSequence.length} Tools Stack
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
+                    {preset.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-600 mt-2 line-clamp-2">
+                    {preset.executiveSummary}
+                  </p>
+
+                  {/* Benchmark Parameters Strip */}
+                  <div className="mt-3 p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-3xs font-mono text-slate-700 space-y-1">
+                    {preset.appliedParameters.slice(0, 2).map((param, pIdx) => (
+                      <div key={pIdx} className="flex justify-between">
+                        <span className="text-slate-500">{param.label}:</span>
+                        <span className="font-bold text-slate-900">{param.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Sundaresh Insight Quote */}
+                  <div className="mt-3 text-3xs text-slate-500 italic border-l-2 border-indigo-400 pl-2">
+                    "{preset.sundareshInsight.slice(0, 110)}..."
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                    <PrimaryIcon className="w-3.5 h-3.5 text-indigo-600" />
+                    <span className="font-semibold text-2xs">{primaryTool?.shortName || preset.primaryToolId}</span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (onApplyPreset) {
+                        onApplyPreset(preset.id, preset.primaryToolId);
+                      } else {
+                        onSelectTool(preset.primaryToolId, 'simulators');
+                      }
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Load Benchmark</span>
+                    <ArrowRight className="w-3 h-3 text-indigo-700" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 6. OFFICIAL EXECUTIVE CERTIFICATION & PROGRESS TRACKER (SUGGESTION #5) */}
+      <section className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 lg:p-10 text-white border border-slate-800 shadow-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-8 space-y-4">
+            <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
+              <Award className="w-4 h-4 text-amber-400" />
+              <span className="font-mono uppercase tracking-wider">Executive Credential & Curriculum Mastery</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight font-display">
+              Earn Your LinkedIn-Verifiable Executive Certificate
+            </h2>
+
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+              Complete 100% of the simulators in any strategic discipline to unlock an official Pillar Mastery Certificate issued by Sundaresh Kamaraj, verified with a tamper-proof QR credential hash and direct 1-click LinkedIn Add-to-Profile integration.
+            </p>
+
+            {/* Live User Progress Bars */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                <div className="flex justify-between text-2xs mb-1.5">
+                  <span className="text-slate-400 font-semibold">Simulators Completed:</span>
+                  <span className="font-mono text-emerald-400 font-bold">
+                    {completedSimulatorsCount} / {allTools.length} ({Math.round((completedSimulatorsCount / allTools.length) * 100)}%)
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.round((completedSimulatorsCount / allTools.length) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                <div className="flex justify-between text-2xs mb-1.5">
+                  <span className="text-slate-400 font-semibold">Exam Questions Passed:</span>
+                  <span className="font-mono text-indigo-400 font-bold">
+                    {completedQuizzesCount} / 285 ({Math.round((completedQuizzesCount / 285) * 100)}%)
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.round((completedQuizzesCount / 285) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex items-center gap-3 flex-wrap">
+              {onOpenCertificate && (
+                <button
+                  onClick={onOpenCertificate}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                >
+                  <Award className="w-4 h-4 text-slate-950" />
+                  <span>Preview Official Certificate</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => onNavigateTab('quizzes')}
+                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                <span>Start Certification Exam</span>
+              </button>
+
+              {onOpenStrategyVault && (
+                <button
+                  onClick={onOpenStrategyVault}
+                  className="px-4 py-2.5 text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+                  title="Export complete progress backup to JSON"
+                >
+                  <span>Vault Backup (JSON)</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Official QR Seal Preview Box */}
+          <div className="lg:col-span-4 bg-slate-950 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+            <div className="w-24 h-24 mx-auto rounded-xl bg-white p-1.5 shadow-md border border-amber-400/40">
+              <img
+                src="/assets/aistudio/QR-BiZTools_by_Sundaresh_Kamaraj-aaa426c8_f9bdb1da.png"
+                alt="BizTools Official Verified Credential QR Seal"
+                className="w-full h-full object-contain"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white tracking-wide">
+                OFFICIAL VERIFIED SEAL
+              </div>
+              <div className="text-3xs text-amber-400 font-mono mt-0.5">
+                Credential ID: BIZ-MSTR-2026-SK
+              </div>
+              <div className="text-3xs text-slate-400 mt-1">
+                Verified at <span className="text-slate-300 font-mono">sundaresh.blog</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. STRATEGIC HEALTH RADAR TEASER (SUGGESTION #6) */}
+      <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xs">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-600">
+              <Activity className="w-4 h-4 text-indigo-600" />
+              <span>Diagnostic Benchmark</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-display">
+              Enterprise Strategic Health Audit
+            </h2>
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Where does your leadership team stand relative to top-decile global competitors? Our 10-point diagnostic benchmarks your organization across Strategy, Innovation, Finance, Operations, Risk, Governance, Talent, and Analytics.
+            </p>
+
+            {/* Benchmark Decile Metrics */}
+            <div className="grid grid-cols-3 gap-3 pt-2 text-center">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="text-lg font-black text-slate-900 font-mono">92%</div>
+                <div className="text-3xs text-slate-500 font-medium uppercase mt-0.5">Top Decile</div>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="text-lg font-black text-indigo-700 font-mono">54%</div>
+                <div className="text-3xs text-slate-500 font-medium uppercase mt-0.5">Global Median</div>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="text-lg font-black text-amber-700 font-mono">38%</div>
+                <div className="text-3xs text-slate-500 font-medium uppercase mt-0.5">Distressed</div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center gap-3">
+              {onOpenHealthAudit && (
+                <button
+                  onClick={onOpenHealthAudit}
+                  className="px-5 py-2.5 bg-indigo-900 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+                >
+                  <Activity className="w-4 h-4 text-indigo-300" />
+                  <span>Launch 10-Point Audit</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-indigo-300" />
+                </button>
+              )}
+
+              <button
+                onClick={() => onNavigateTab('stacks')}
+                className="px-4 py-2.5 text-xs font-semibold text-slate-700 hover:text-slate-950 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <GitCompare className="w-3.5 h-3.5 text-slate-500" />
+                <span>Cross-Pillar Radar</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-3 text-xs">
+            <div className="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono">
+              Key Executive Findings:
+            </div>
+            <ul className="space-y-2 text-slate-600">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>78% of strategic failures</strong> stem from operational misalignment, not poor initial strategy.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>3.8x enterprise valuation premium</strong> realized by organizations with synchronized quarterly OKRs and RACI governance.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>Zero cloud leakage:</strong> All audit inputs and scenario simulations execute 100% locally on your client machine.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. DAILY BUSINESS STRATEGY INSIGHT (Powered by Gemini AI) */}
       <DailyBusinessInsight
         onSelectTool={(toolId, view) => onSelectTool(toolId, view)}
       />
 
-      {/* 2. THE 10 EXECUTIVE DISCIPLINES: Interactive Leadership Explorer */}
+      {/* 9. THE 10 EXECUTIVE DISCIPLINES: Interactive Leadership Explorer */}
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -401,7 +1371,6 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         <div className="flex items-center gap-1.5 overflow-x-auto pb-2 min-w-0 w-full scrollbar-thin">
           {pillarsData.map((p, idx) => {
             const isSelected = activePillarIndex === idx;
-            const IconComp = p.icon;
             return (
               <button
                 key={p.id}
@@ -510,116 +1479,7 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         </div>
       </section>
 
-      {/* 3. FOUR STRATEGIC LEARNING MODES */}
-      <section className="space-y-6">
-        <div>
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-            Learning Methodology
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-display">
-            How Leaders Master Frameworks in BizTools
-          </h2>
-          <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-            Passive reading fails under high-stakes boardroom pressure. BizTools trains intuition through four interconnected modalities.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Mode 1 */}
-          <div
-            onClick={() => onNavigateTab('simulators')}
-            className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all shadow-xs space-y-3 cursor-pointer group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
-              <PlayCircle className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <span className="text-3xs font-mono font-bold text-slate-400 uppercase">01. Numerical Stress Testing</span>
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
-                Real-Time Simulators
-              </h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Dynamically manipulate financial levers, cost structures, and market sensitivity sliders. Observe immediate quantitative waterfall adjustments.
-            </p>
-            <div className="pt-2 text-xs font-bold text-emerald-700 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-              <span>Launch 57 Simulators</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
-          {/* Mode 2 */}
-          <div
-            onClick={() => onNavigateTab('tools')}
-            className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all shadow-xs space-y-3 cursor-pointer group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200">
-              <BookOpen className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <span className="text-3xs font-mono font-bold text-slate-400 uppercase">02. Theoretical Mechanics</span>
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                Executive Teardown Guides
-              </h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Historical origins, foundational theorems, operational steps, and real case studies from Apple, Tesla, Netflix, Toyota, and Amazon.
-            </p>
-            <div className="pt-2 text-xs font-bold text-blue-700 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-              <span>Read Strategy Guides</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
-          {/* Mode 3 */}
-          <div
-            onClick={() => onNavigateTab('scenarios')}
-            className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all shadow-xs space-y-3 cursor-pointer group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200">
-              <ShieldAlert className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <span className="text-3xs font-mono font-bold text-slate-400 uppercase">03. Boardroom Decision Labs</span>
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-amber-700 transition-colors">
-                44 Crisis Scenarios
-              </h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Step into high-velocity turnaround, market entry, and capital crunch dilemmas with branching consequences and tactical rationale.
-            </p>
-            <div className="pt-2 text-xs font-bold text-amber-700 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-              <span>Enter Scenario Labs</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
-          {/* Mode 4 */}
-          <div
-            onClick={() => onNavigateTab('quizzes')}
-            className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all shadow-xs space-y-3 cursor-pointer group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-200">
-              <CheckCircle2 className="w-5 h-5 text-indigo-600" />
-            </div>
-            <div>
-              <span className="text-3xs font-mono font-bold text-slate-400 uppercase">04. Rigorous Certification</span>
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
-                285 Assessment Qs
-              </h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Verify your analytical precision across all 57 frameworks. Detailed explanations for every question with downloadable certificate.
-            </p>
-            <div className="pt-2 text-xs font-bold text-indigo-700 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-              <span>Start Certification</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. MARQUEE FRAMEWORKS SPOTLIGHT (BENTO GRID) */}
+      {/* 10. MARQUEE SIMULATORS BENTO GRID */}
       <section className="space-y-6">
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
@@ -744,7 +1604,7 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         </div>
       </section>
 
-      {/* 5. AUTHOR & METHODOLOGY NOTE */}
+      {/* 11. AUTHOR & METHODOLOGY NOTE */}
       <section className="bg-slate-900 rounded-3xl text-white p-8 sm:p-10 border border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
           <div className="md:col-span-8 space-y-4">
@@ -841,7 +1701,7 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         </div>
       </section>
 
-      {/* 6. EXECUTIVE STRATEGY & PLATFORM ARCHITECTURE FAQ (AEO & GEO KNOWLEDGE CENTER) */}
+      {/* 12. EXECUTIVE STRATEGY & PLATFORM ARCHITECTURE FAQ (AEO & GEO KNOWLEDGE CENTER) */}
       <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
           <div>
@@ -918,7 +1778,7 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         </div>
       </section>
 
-      {/* 7. BOTTOM CALL TO ACTION */}
+      {/* 13. BOTTOM CALL TO ACTION */}
       <section className="text-center py-8 space-y-4">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-display">
           Begin Your Executive Strategy Journey
