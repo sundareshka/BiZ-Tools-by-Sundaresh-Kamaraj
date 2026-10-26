@@ -23,7 +23,9 @@ import {
   ExternalLink,
   Target,
   BrainCircuit,
-  Award
+  Award,
+  HelpCircle,
+  ChevronDown
 } from 'lucide-react';
 import { ToolDefinition } from '../data/toolsData.ts';
 import { DailyBusinessInsight } from './DailyBusinessInsight.tsx';
@@ -31,7 +33,7 @@ import { DailyBusinessInsight } from './DailyBusinessInsight.tsx';
 interface HomePageProps {
   allTools: ToolDefinition[];
   onSelectTool: (toolId: string, view: 'simulators' | 'tools' | 'quizzes') => void;
-  onNavigateTab: (tab: 'simulators' | 'tools' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance') => void;
+  onNavigateTab: (tab: 'home' | 'simulators' | 'tools' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance' | 'author') => void;
 }
 
 export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProps) {
@@ -42,6 +44,9 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
 
   // Active pillar filter for the 10 pillars interactive explorer
   const [activePillarIndex, setActivePillarIndex] = useState<number>(0);
+
+  // Active FAQ accordion state for AEO/GEO Answer Center
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   // Calculate live DuPont ROE on hero
   const calculatedRoe = ((netMargin / 100) * assetTurnover * equityMultiplier * 100).toFixed(1);
@@ -754,28 +759,51 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
               "Strategic thinking is not an abstract art form; it is a discipline of structured trade-offs, financial mathematics, and behavioral mechanics. BizTools was engineered to provide management consultants, directors, and founders with a zero-friction playground to stress-test frameworks before entering the boardroom."
             </p>
-            <div className="flex items-center gap-3 pt-2">
-              <div className="w-11 h-11 rounded-xl overflow-hidden bg-white border border-slate-700 shadow-sm shrink-0 flex items-center justify-center">
-                <img
-                  src="/assets/aistudio/Sundaresh_Kamaraj_Logo-01_840f0755.jpg"
-                  alt="Sundaresh Kamaraj"
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div>
-                <div className="text-sm font-bold text-white">Sundaresh Kamaraj</div>
-                <div className="text-2xs text-slate-400">Author & Creator · BizTools Strategy Architecture</div>
-              </div>
-              <a
-                href="https://sundaresh.blog"
-                target="_blank"
-                rel="noreferrer"
-                className="ml-auto text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-800/80">
+              <div
+                onClick={() => onNavigateTab('author')}
+                className="flex items-center gap-3 cursor-pointer group/author"
+                title="View full Author Biography & Credential Dossier"
               >
-                <span>sundaresh.blog</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+                <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-800 border-2 border-indigo-400/40 shadow-sm shrink-0 flex items-center justify-center group-hover/author:border-indigo-400 group-hover/author:scale-105 transition-all">
+                  <img
+                    src="/assets/aistudio/25_a1d1119e.jpeg"
+                    alt="Sundaresh Kamaraj"
+                    className="w-full h-full object-cover object-top"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white group-hover/author:text-indigo-300 transition-colors flex items-center gap-1.5">
+                    <span>Sundaresh Kamaraj</span>
+                    <span className="text-3xs font-mono font-bold bg-indigo-900/80 text-indigo-200 border border-indigo-400/30 px-1.5 py-0.2 rounded">
+                      Author
+                    </span>
+                  </div>
+                  <div className="text-2xs text-slate-400">
+                    Founder & Chairman, Elysium Group · 26+ Years Experience · 30+ Books
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => onNavigateTab('author')}
+                  className="px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>Author Biography</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <a
+                  href="https://sundaresh.blog"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 transition-colors flex items-center justify-center"
+                  title="Visit sundaresh.blog"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
           </div>
 
@@ -813,7 +841,84 @@ export function HomePage({ allTools, onSelectTool, onNavigateTab }: HomePageProp
         </div>
       </section>
 
-      {/* 6. BOTTOM CALL TO ACTION */}
+      {/* 6. EXECUTIVE STRATEGY & PLATFORM ARCHITECTURE FAQ (AEO & GEO KNOWLEDGE CENTER) */}
+      <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-700">
+              <HelpCircle className="w-4 h-4" />
+              <span>Knowledge Engine & FAQs</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1 font-display">
+              Executive Strategy & Architecture FAQ
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
+              Direct, verified answers to core questions regarding platform methodology, author credentials, framework mechanics, and enterprise data privacy.
+            </p>
+          </div>
+          <span className="text-2xs font-mono font-bold px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 self-start sm:self-auto">
+            AEO / GEO Grounded
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            {
+              question: 'What is BizTools and how do the 57 executive simulators work?',
+              answer: 'BizTools is an interactive executive strategy and business management simulation suite authored by Sundaresh Kamaraj. Unlike static textbooks, BizTools transforms 57 core C-Suite frameworks across 10 strategic pillars into dynamic, mathematical laboratories. Users can adjust inputs, stress-test variables (margins, turnover, discount rates, threat levels), simulate corporate case studies, and generate board-ready strategic memoranda in real time.'
+            },
+            {
+              question: 'Who is Sundaresh Kamaraj and what are his verified credentials?',
+              answer: 'Sundaresh Kamaraj is an Indian author, serial entrepreneur, technologist, and executive business mentor with over 26 years of leadership experience in Information Technology. In 1999, he founded the Elysium Group of Companies in Madurai, Tamil Nadu, developing it into an international IT and research powerhouse. He holds a B.E. in Electronics & Communication and an M.S. in Information Technology, has authored over 30 published books, and delivered more than 200 keynote seminars and workshops worldwide.'
+            },
+            {
+              question: 'What are the 10 Knowledge Pillars covered across the platform?',
+              answer: 'The platform spans 10 comprehensive management disciplines: 1. Strategy & Market Positioning (SWOT, Porter Five Forces, Blue Ocean, Ansoff, VRIO, OKRs), 2. Business Model Innovation (BMC, Lean Canvas, Value Proposition, Design Thinking, JTBD), 3. Marketing & Customer Growth (4Ps/7Ps, STP, AIDA, Customer Journey, Growth Hacking, NPS), 4. Operations & Process Excellence (Lean 8 Wastes, Six Sigma DMAIC, Kaizen, VSM, BPR, Kanban), 5. Financial Performance (Break-Even, CBA & NPV, Zero-Based Budgeting, DuPont ROE, Working Capital), 6. Project Management (Gantt, Critical Path CPM, PERT, Agile, Scrum), 7. HR & Organizational Design (McKinsey 7S, RACI, Engagement, Performance Appraisal, Competency Mapping), 8. Risk & Decision Science (Risk Matrix, Decision Trees, Monte Carlo, Scenario Planning, Pareto), 9. Product & Startup Scaling (MVP Builder, Roadmaps, User Story Mapping, A/B Testing, Churn Analysis), and 10. Data & Analytics (KPI Cascades, Executive Dashboard Design, Cohort Retention, Predictive Regression, Modern BI Star Schema).'
+            },
+            {
+              question: 'How does BizTools support C-Suite, boardroom, and consulting decisions?',
+              answer: 'BizTools provides zero-latency analytical tools designed specifically for corporate development teams, founders, and management consultants. Features include 1-Click Corporate Presets based on global benchmarks (Apple, Tesla, Toyota, Amazon), a 16:9 Widescreen Board Deck Builder, the Strategy Health Audit with 10-point radar diagnosis, and instant executive briefing memos exportable to PDF or clipboard.'
+            },
+            {
+              question: 'How is data privacy handled, and is BizTools fully functional offline?',
+              answer: 'BizTools operates with 100% client-side data privacy. No user financial inputs, scenario snapshots, custom slide decks, or quiz progress are transmitted to external cloud servers; all state is securely isolated within the browser’s local storage (localStorage / IndexedDB). The Progressive Web App (PWA) architecture ensures the entire suite runs seamlessly offline without network connectivity.'
+            }
+          ].map((faq, index) => {
+            const isOpen = openFaqIndex === index;
+            return (
+              <div
+                key={index}
+                className="border border-slate-200 rounded-2xl overflow-hidden transition-all bg-slate-50/50 hover:bg-slate-50"
+              >
+                <button
+                  onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left cursor-pointer"
+                  aria-expanded={isOpen}
+                >
+                  <span className="font-bold text-sm sm:text-base text-slate-900 flex items-center gap-2.5">
+                    <span className="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                      Q{index + 1}
+                    </span>
+                    <span>{faq.question}</span>
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 text-indigo-600' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-0 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-white">
+                    <p className="pt-3">{faq.answer}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 7. BOTTOM CALL TO ACTION */}
       <section className="text-center py-8 space-y-4">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-display">
           Begin Your Executive Strategy Journey

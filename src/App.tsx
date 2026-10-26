@@ -94,6 +94,8 @@ import { TrainingQuizModule } from './components/TrainingQuizModule.tsx';
 import { MasterComparisonView } from './components/MasterComparisonView.tsx';
 import { ToolDetailView } from './components/ToolDetailView.tsx';
 import { GlossaryView } from './components/GlossaryView.tsx';
+import { AuthorBiographyView } from './components/AuthorBiographyView.tsx';
+import { SEOHeadManager } from './components/SEOHeadManager.tsx';
 import { GlobalSearchModal } from './components/GlobalSearchModal.tsx';
 import { UserProgressIndicator } from './components/UserProgressIndicator.tsx';
 import { ProgressRing } from './components/ProgressRing.tsx';
@@ -166,7 +168,8 @@ import {
   Menu,
   X,
   Activity,
-  Tag
+  Tag,
+  UserCheck
 } from 'lucide-react';
 
 const RAW_TOOLS: ToolDefinition[] = [
@@ -194,7 +197,7 @@ export default function App() {
     try {
       const params = new URLSearchParams(window.location.search);
       const tool = params.get('tool');
-      const tab = params.get('tab') as 'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance' | null;
+      const tab = params.get('tab') as 'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance' | 'author' | null;
       const category = params.get('category') as any;
       const compare = params.get('compare');
       return { tool, tab, category, compare };
@@ -203,7 +206,7 @@ export default function App() {
     }
   });
 
-  const [activeMainTab, setActiveMainTab] = useState<'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance'>(() => {
+  const [activeMainTab, setActiveMainTab] = useState<'home' | 'tools' | 'simulators' | 'scenarios' | 'quizzes' | 'stacks' | 'glossary' | 'performance' | 'author'>(() => {
     if (initialDeepLink?.tab) return initialDeepLink.tab;
     if (initialDeepLink?.tool) return 'simulators';
     return 'home';
@@ -790,6 +793,9 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-slate-200 overflow-x-hidden w-full max-w-full">
+      {/* Dynamic SEO, AEO & GEO Head Meta Manager */}
+      <SEOHeadManager activeMainTab={activeMainTab} selectedTool={currentTool} />
+
       {/* 1. Global Navigation Bar - Two-Row Architecture */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs w-full">
         {/* ROW 1: Executive Brand & Utility Bar */}
@@ -820,17 +826,25 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
                     </span>
                   </div>
                   <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-1.5 text-2xs sm:text-xs text-slate-500 font-medium mt-0.5 sm:mt-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMainTab('author');
+                    }}
+                    className="flex items-center gap-1.5 text-2xs sm:text-xs text-slate-500 font-medium mt-0.5 sm:mt-1 cursor-pointer group/author"
+                    title="View Sundaresh Kamaraj Author Biography"
                   >
                     <span>by</span>
+                    <span className="text-indigo-600 group-hover/author:text-indigo-900 font-semibold group-hover/author:underline inline-flex items-center gap-0.5">
+                      Sundaresh Kamaraj
+                    </span>
                     <a
                       href="https://sundaresh.blog"
                       target="_blank"
                       rel="noreferrer"
-                      className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors hover:underline inline-flex items-center gap-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-slate-400 hover:text-indigo-600 transition-colors p-0.5"
+                      title="Visit personal website (sundaresh.blog)"
                     >
-                      Sundaresh Kamaraj
                       <ExternalLink className="w-2.5 h-2.5 opacity-70" />
                     </a>
                   </div>
@@ -998,6 +1012,28 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
                               <div className="text-xs font-semibold text-slate-800">Milestone Badges</div>
                               <div className="text-2xs text-slate-500">Credentials & achievements</div>
                             </div>
+                          </button>
+
+                          {/* Author Biography */}
+                          <button
+                            onClick={() => {
+                              setActiveMainTab('author');
+                              setIsStudioMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 group-hover:bg-indigo-100 transition-colors">
+                                <UserCheck className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-slate-800">Author Biography</div>
+                                <div className="text-2xs text-slate-500">Sundaresh Kamaraj profile & books</div>
+                              </div>
+                            </div>
+                            <span className="text-3xs font-mono font-bold bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded border border-indigo-200">
+                              Bio
+                            </span>
                           </button>
 
                           {/* Framework Wizard */}
@@ -1226,6 +1262,20 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
                   <BrainCircuit className={`w-3.5 h-3.5 ${activeMainTab === 'performance' ? 'text-indigo-200' : 'text-indigo-600'}`} />
                   <span>Performance</span>
                 </button>
+
+                {/* 9. Author Biography */}
+                <button
+                  onClick={() => setActiveMainTab('author')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    activeMainTab === 'author'
+                      ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                  title="Author Biography & Credential Dossier"
+                >
+                  <UserCheck className={`w-3.5 h-3.5 ${activeMainTab === 'author' ? 'text-indigo-200' : 'text-indigo-600'}`} />
+                  <span>Author Bio</span>
+                </button>
               </nav>
 
               {/* Right side helper info in Row 2 */}
@@ -1346,6 +1396,18 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
                 >
                   <BrainCircuit className="w-4 h-4 text-indigo-400" />
                   <span>Performance</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab('author');
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold cursor-pointer col-span-2 ${
+                    activeMainTab === 'author' ? 'bg-indigo-900 text-white' : 'bg-indigo-50/70 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/60'
+                  }`}
+                >
+                  <UserCheck className="w-4 h-4 text-indigo-600" />
+                  <span>Author Biography · Sundaresh Kamaraj</span>
                 </button>
               </div>
 
@@ -2640,6 +2702,17 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
             }}
           />
         )}
+
+        {/* VIEW 8: AUTHOR BIOGRAPHY & CREDENTIAL DOSSIER */}
+        {activeMainTab === 'author' && (
+          <AuthorBiographyView
+            onNavigateTab={(tab) => {
+              setActiveMainTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onOpenAudit={() => setIsAuditModalOpen(true)}
+          />
+        )}
       </main>
 
       {/* Footer */}
@@ -2650,11 +2723,31 @@ ${currentTool.implementationGuide?.proTips?.[0] || currentTool.limitations?.[0] 
               BizTools · Executive Strategy, Operations, Finance, Product & Data Analytics Platform
             </p>
             <p className="mt-0.5 text-slate-500">
-              by Sundaresh Kamaraj · Version 1.21 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
+              by{' '}
+              <button
+                onClick={() => {
+                  setActiveMainTab('author');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+              >
+                Sundaresh Kamaraj
+              </button>
+              {' '}· Version 1.21 (October 2026) · Covering 57 Core Executive Frameworks across 10 Pillars
             </p>
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                setActiveMainTab('author');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Author Biography</span>
+            </button>
             <button
               onClick={() => setActiveMainTab('stacks')}
               className="hover:text-slate-900 transition-colors"
